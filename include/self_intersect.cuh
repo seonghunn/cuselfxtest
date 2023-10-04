@@ -37,6 +37,7 @@ namespace lbvh{
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
+    
     // init triangle list ----------------------
     cudaEvent_t start_init, stop_init;
     cudaEventCreate(&start_init);
@@ -97,12 +98,9 @@ namespace lbvh{
     cudaEventDestroy(start0);
     cudaEventDestroy(stop0);
 
-    
 
 
-    std::cout << "testing query_device:overlap ...\n";
-
-
+    // compute query list ----------------------------------
     cudaEvent_t start1, stop1;
     cudaEventCreate(&start1);
     cudaEventCreate(&stop1);
@@ -121,7 +119,6 @@ namespace lbvh{
     // device vector to store query result
     // query result : 0xFFFFFFFF에 도달하면 끝
 
-    // make query list
     unsigned int* num_found_results_raw = thrust::raw_pointer_cast(num_found_results_dev.data());
     unsigned int* buffer_results_raw = thrust::raw_pointer_cast(buffer_results_dev.data());
 
@@ -166,7 +163,7 @@ namespace lbvh{
     cudaEventSynchronize(stop1);
     float milliseconds1 = 0;
     cudaEventElapsedTime(&milliseconds1, start1, stop1);
-    printf("find query runtime %f ms\n", milliseconds1);
+    printf("query runtime %f ms\n", milliseconds1);
     cudaEventDestroy(start1);
     cudaEventDestroy(stop1);
 
@@ -194,7 +191,7 @@ namespace lbvh{
         cout<<endl;
     }*/
 
-    // delete adjacent faces
+    // remove adjacent faces ---------------------------------------
     cudaEvent_t start2, stop2;
     cudaEventCreate(&start2);
     cudaEventCreate(&stop2);
@@ -206,7 +203,7 @@ namespace lbvh{
                      [num_found_results_raw, buffer_results_raw, F_d_raw] __device__(std::size_t idx) {
                          
                         const unsigned int num_found = num_found_results_raw[idx];
-
+                        // check each face and query list has same vertices, if they have at least 1 same vertex, they are adjacent faces
                         for(unsigned int i = 0; i < num_found; i++){
                             unsigned int query_idx = buffer_results_raw[idx * BUFFER_SIZE + i];
                             bool flag = false;
@@ -252,6 +249,7 @@ namespace lbvh{
         std::cout << std::endl;
     }*/
 
+    // actual triangle - triangle intersection test with query list --------------------------
     cudaEvent_t start3, stop3;
     cudaEventCreate(&start3);
     cudaEventCreate(&stop3);
