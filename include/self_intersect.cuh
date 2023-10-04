@@ -38,6 +38,11 @@ namespace lbvh{
     cudaEventCreate(&stop);
     cudaEventRecord(start);
     // init triangle list ----------------------
+    cudaEvent_t start_init, stop_init;
+    cudaEventCreate(&start_init);
+    cudaEventCreate(&stop_init);
+    cudaEventRecord(start_init);
+
     unsigned int num_vertices = V.size()/3;
     unsigned int num_faces = F.size()/3;
 
@@ -66,6 +71,14 @@ namespace lbvh{
                         return;
                      });
 
+    cudaEventRecord(stop_init);
+    cudaEventSynchronize(stop_init);
+    float milliseconds_init = 0;
+    cudaEventElapsedTime(&milliseconds_init, start_init, stop_init);
+    printf("triangle init runtime %f ms\n", milliseconds_init);
+    cudaEventDestroy(start_init);
+    cudaEventDestroy(stop_init);
+
     //construct bvh -------------------------------
     cudaEvent_t start0, stop0;
     cudaEventCreate(&start0);
@@ -73,6 +86,8 @@ namespace lbvh{
     cudaEventRecord(start0);
 
     lbvh::bvh<float, Triangle, aabb_getter> bvh(triangles_d.begin(), triangles_d.end(), false);
+    // get device ptr
+    const auto bvh_dev = bvh.get_device_repr();
     
     cudaEventRecord(stop0);
     cudaEventSynchronize(stop0);
@@ -83,8 +98,7 @@ namespace lbvh{
     cudaEventDestroy(stop0);
 
     
-    // get device ptr
-    const auto bvh_dev = bvh.get_device_repr();
+
 
     std::cout << "testing query_device:overlap ...\n";
 
@@ -159,11 +173,12 @@ namespace lbvh{
     //print
     
     //copy result to host vector
+    /*
     std::vector<unsigned int> num_found_results_h(num_faces);
     thrust::copy(num_found_results_dev.begin(), num_found_results_dev.end(), num_found_results_h.begin());
     std::vector<unsigned int> buffer_results_h(num_faces * BUFFER_SIZE);
     thrust::copy(buffer_results_dev.begin(), buffer_results_dev.end(), buffer_results_h.begin());
-    cudaDeviceSynchronize();
+    cudaDeviceSynchronize();*/
     
     /*
     for(int i = 0; i<num_faces; i++){
@@ -253,19 +268,19 @@ namespace lbvh{
     cudaEventDestroy(start3);
     cudaEventDestroy(stop3);
 
-
-    cudaDeviceSynchronize();
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    float milliseconds = 0;
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("Total self-intersect test GPU runtime %f ms\n", milliseconds);
     //end_cpu = clock();
 
     //cout << "CPU runtime : " << (double)(end_cpu - start_cpu) / CLOCKS_PER_SEC << " sec\n";
 
     //cout<<"tri_tri intersect : "<<isIntersect<<endl;
     bvh.clear();
+    cudaDeviceSynchronize();
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    printf("Total self-intersect test GPU runtime %f ms\n", milliseconds);
+    
     return isIntersect;
     }
 
