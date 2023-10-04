@@ -188,7 +188,7 @@ CMakeFiles/lbvh.dir/main.cu.o : /seoh_fast_cephfs/bvh-gpu/lbvh/main.cu \
     /usr/include/c++/11/bits/refwrap.h \
     /usr/include/c++/11/bits/std_function.h \
     /usr/include/c++/11/typeinfo \
-    /seoh_fast_cephfs/bvh-gpu/lbvh/lbvh.cuh \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/intersect.cuh \
     /seoh_fast_cephfs/bvh-gpu/lbvh/include/aabb.cuh \
     /seoh_fast_cephfs/bvh-gpu/lbvh/include/utility.cuh \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/math_constants.h \

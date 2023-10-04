@@ -332,7 +332,7 @@ CMakeFiles/lbvh.dir/main.cu.o: /seoh_fast_cephfs/bvh-gpu/lbvh/main.cu \
   /seoh_fast_cephfs/bvh-gpu/lbvh/include/tri_tri_intersect.cuh \
   /seoh_fast_cephfs/bvh-gpu/lbvh/include/types.h \
   /seoh_fast_cephfs/bvh-gpu/lbvh/include/utility.cuh \
-  /seoh_fast_cephfs/bvh-gpu/lbvh/lbvh.cuh \
+  /seoh_fast_cephfs/bvh-gpu/lbvh/intersect.cuh \
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \
@@ -1620,6 +1620,8 @@ _deps/eigen-src/Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h:
 
 /usr/include/c++/11/bits/postypes.h:
 
+/usr/local/cuda/targets/x86_64-linux/include/thrust/system/detail/error_category.inl:
+
 /usr/include/c++/11/bits/locale_facets.tcc:
 
 /usr/include/c++/11/bits/list.tcc:
@@ -1703,8 +1705,6 @@ _deps/eigen-src/Eigen/src/Cholesky/LLT.h:
 /usr/local/cuda/targets/x86_64-linux/include/thrust/merge.h:
 
 /usr/local/cuda/targets/x86_64-linux/include/thrust/copy.h:
-
-/usr/local/cuda/targets/x86_64-linux/include/thrust/system/detail/error_category.inl:
 
 /seoh_fast_cephfs/bvh-gpu/lbvh/include/morton_code.cuh:
 
@@ -2404,6 +2404,12 @@ _deps/eigen-src/Eigen/src/Core/DenseCoeffsBase.h:
 
 /usr/local/cuda/targets/x86_64-linux/include/thrust/detail/pointer.h:
 
+/seoh_fast_cephfs/bvh-gpu/lbvh/intersect.cuh:
+
+_deps/eigen-src/Eigen/src/Core/VectorBlock.h:
+
+_deps/eigen-src/Eigen/src/SparseCore/SparseView.h:
+
 /usr/local/cuda/targets/x86_64-linux/include/thrust/system/cpp/detail/transform.h:
 
 _deps/eigen-src/Eigen/src/Core/Ref.h:
@@ -2718,10 +2724,6 @@ _deps/eigen-src/Eigen/src/SparseCore/SparseTranspose.h:
 
 _deps/eigen-src/Eigen/src/SparseCore/SparseTriangularView.h:
 
-_deps/eigen-src/Eigen/src/Core/VectorBlock.h:
-
-_deps/eigen-src/Eigen/src/SparseCore/SparseView.h:
-
 /usr/include/x86_64-linux-gnu/bits/mathcalls.h:
 
 _deps/eigen-src/Eigen/src/SparseLU/SparseLUImpl.h:
@@ -2747,8 +2749,6 @@ _deps/eigen-src/Eigen/src/Core/VectorwiseOp.h:
 _deps/eigen-src/Eigen/src/SparseQR/SparseQR.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h:
-
-/seoh_fast_cephfs/bvh-gpu/lbvh/lbvh.cuh:
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h:
 

@@ -11,7 +11,7 @@
 using namespace std;
 
 namespace lbvh{
-    bool self_intersect(const vector<float> &V, const vector<unsigned int> &F, thrust::device_vector<unsigned int>& adj_faces_dev) {
+    bool self_intersect(const vector<float> &V, const vector<unsigned int> &F) {
     
     /*
     // 1. Create a host vector of appropriate size.
@@ -41,7 +41,6 @@ namespace lbvh{
     unsigned int num_vertices = V.size()/3;
     unsigned int num_faces = F.size()/3;
 
-    std::vector<Triangle> triangles;
     thrust::device_vector<float> V_d = V;
     thrust::device_vector<unsigned int> F_d = F;
     thrust::device_vector<Triangle> triangles_d(num_faces);
@@ -67,60 +66,13 @@ namespace lbvh{
                         return;
                      });
 
-
-    // 1. 디바이스에서 호스트로 복사
-std::vector<Triangle> triangles_h(num_faces);
-thrust::copy(triangles_d.begin(), triangles_d.end(), triangles_h.begin());
-
-// 2. 3개의 삼각형 단위로 출력
-for (size_t i = 0; i < triangles_h.size(); i += 3) {
-    for (size_t j = 0; j < 3 && (i + j) < triangles_h.size(); ++j) {
-        const Triangle& tri = triangles_h[i + j];
-        std::cout << "Triangle " << (i + j + 1) << ": "
-                  << "v0(" << tri.v0.x << ", " << tri.v0.y << ", " << tri.v0.z << ") "
-                  << "v1(" << tri.v1.x << ", " << tri.v1.y << ", " << tri.v1.z << ") "
-                  << "v2(" << tri.v2.x << ", " << tri.v2.y << ", " << tri.v2.z << ")"
-                  << std::endl;
-    }
-    std::cout << std::endl;
-}
-
-        // V와 F로부터 삼각형(Triangle) 목록을 초기화합니다.
-
-    for (unsigned int i = 0; i < F.size()/3; i++)
-    {
-        Triangle tri;
-        unsigned int v0_row = F[i * 3 + 0];
-        unsigned int v1_row = F[i * 3 + 1];
-        unsigned int v2_row = F[i * 3 + 2];
-        tri.v0 = make_float3(V[v0_row * 3 + 0], V[v0_row * 3 + 1], V[v0_row * 3 + 2]);
-        tri.v1 = make_float3(V[v1_row * 3 + 0], V[v1_row * 3 + 1], V[v1_row * 3 + 2]);
-        tri.v2 = make_float3(V[v2_row * 3 + 0], V[v2_row * 3 + 1], V[v2_row * 3 + 2]);
-        triangles.push_back(tri);
-    }
-
-    for (unsigned int i = 0; i < triangles.size(); i++)
-{
-    printf("Triangle %d: v0(%f, %f, %f) v1(%f, %f, %f) v2(%f, %f, %f)\n", 
-        i + 1, 
-        triangles[i].v0.x, triangles[i].v0.y, triangles[i].v0.z,
-        triangles[i].v1.x, triangles[i].v1.y, triangles[i].v1.z,
-        triangles[i].v2.x, triangles[i].v2.y, triangles[i].v2.z);
-
-    // If i is 2 (0-indexed), 5, 8, ... then insert a newline for better readability
-    if ((i + 1) % 3 == 0)
-    {
-        printf("\n");
-    }
-}
-
+    //construct bvh -------------------------------
     cudaEvent_t start0, stop0;
     cudaEventCreate(&start0);
     cudaEventCreate(&stop0);
     cudaEventRecord(start0);
 
-    //construct bvh
-    lbvh::bvh<float, Triangle, aabb_getter> bvh(triangles.begin(), triangles.end(), false);
+    lbvh::bvh<float, Triangle, aabb_getter> bvh(triangles_d.begin(), triangles_d.end(), false);
     
     cudaEventRecord(stop0);
     cudaEventSynchronize(stop0);
@@ -141,9 +93,9 @@ for (size_t i = 0; i < triangles_h.size(); i += 3) {
     cudaEventCreate(&start1);
     cudaEventCreate(&stop1);
     cudaEventRecord(start1);
-    const std::size_t N = triangles.size();
-    thrust::device_vector<unsigned int> num_found_results_dev(N);
-    thrust::device_vector<unsigned int> buffer_results_dev(N * BUFFER_SIZE, 0xFFFFFFFF);
+    //const std::size_t N = triangles.size();
+    thrust::device_vector<unsigned int> num_found_results_dev(num_faces);
+    thrust::device_vector<unsigned int> buffer_results_dev(num_faces * BUFFER_SIZE, 0xFFFFFFFF);
 
     
 
@@ -161,7 +113,7 @@ for (size_t i = 0; i < triangles_h.size(); i += 3) {
 
     thrust::for_each(thrust::device,
                      thrust::make_counting_iterator<std::size_t>(0),
-                     thrust::make_counting_iterator<std::size_t>(N),
+                     thrust::make_counting_iterator<std::size_t>(num_faces),
                      [bvh_dev, num_found_results_raw, buffer_results_raw] __device__(std::size_t idx)
                      {
                         unsigned int buffer[BUFFER_SIZE];
@@ -205,56 +157,59 @@ for (size_t i = 0; i < triangles_h.size(); i += 3) {
     cudaEventDestroy(stop1);
 
     //print
-    /*
+    
     //copy result to host vector
-    std::vector<unsigned int> num_found_results_h(N);
+    std::vector<unsigned int> num_found_results_h(num_faces);
     thrust::copy(num_found_results_dev.begin(), num_found_results_dev.end(), num_found_results_h.begin());
-    std::vector<unsigned int> buffer_results_h(N * BUFFER_SIZE);
+    std::vector<unsigned int> buffer_results_h(num_faces * BUFFER_SIZE);
     thrust::copy(buffer_results_dev.begin(), buffer_results_dev.end(), buffer_results_h.begin());
     cudaDeviceSynchronize();
     
-    for(int i = 0; i<N; i++){
+    /*
+    for(int i = 0; i<num_faces; i++){
         std::cout<<"i : "<<i<<" num_found : "<<num_found_results_h[i]<<std::endl;
     }
 
 
-    for(int i = 0; i<N; i++){
+    for(int i = 0; i<num_faces; i++){
                     cout<<"i : "<< i<<endl;
         for(int j = 0; j<BUFFER_SIZE; j++){
             cout<<buffer_results_h[i*BUFFER_SIZE + j]<<" ";
         }
         cout<<endl;
-    }
-*/
+    }*/
+
     // delete adjacent faces
-    // 5. Remove adjacent faces using thrust::for_each.
     cudaEvent_t start2, stop2;
     cudaEventCreate(&start2);
     cudaEventCreate(&stop2);
     cudaEventRecord(start2);
 
-    unsigned int* adj_faces_raw = thrust::raw_pointer_cast(adj_faces_dev.data());
     thrust::for_each(thrust::device,
                      thrust::make_counting_iterator<unsigned int>(0),
-                     thrust::make_counting_iterator<unsigned int>(N),
-                     [adj_faces_raw, num_found_results_raw, buffer_results_raw] __device__(std::size_t idx) {
+                     thrust::make_counting_iterator<unsigned int>(num_faces),
+                     [num_found_results_raw, buffer_results_raw, F_d_raw] __device__(std::size_t idx) {
                          
                         const unsigned int num_found = num_found_results_raw[idx];
-                        
-                        for (unsigned int i = 0; i < FACES_SIZE; i++) {
-                            unsigned int adj_face = adj_faces_raw[idx * FACES_SIZE + i];
-                            for (unsigned int j = 0; j < num_found; j++) {
-                                //if (adj_faces_raw[idx * FACES_SIZE + i] == buffer_results_raw[idx * BUFFER_SIZE + j]) {
-                                if (adj_face == buffer_results_raw[idx * BUFFER_SIZE + j]) {    
-                                    buffer_results_raw[idx * BUFFER_SIZE + j] = 0xFFFFFFFF;
+
+                        for(unsigned int i = 0; i < num_found; i++){
+                            unsigned int query_idx = buffer_results_raw[idx * BUFFER_SIZE + i];
+                            bool flag = false;
+                            for(unsigned int j = 0; j < 3; j++){
+                                unsigned int face_current = F_d_raw[idx * 3 + j];
+                                for(unsigned int k = 0; k < 3; k++){
+                                    if(face_current == F_d_raw[query_idx * 3 + k]){
+                                        flag = true;
+                                        buffer_results_raw[idx * BUFFER_SIZE + i] = 0xFFFFFFFF;
+                                        break;
+                                    }
                                 }
+                                if(flag) break;
                             }
                         }
-                         
-
                         return;
                      });
-                     
+
     cudaEventRecord(stop2);
     cudaEventSynchronize(stop2);
     float milliseconds2 = 0;
@@ -263,31 +218,32 @@ for (size_t i = 0; i < triangles_h.size(); i += 3) {
     cudaEventDestroy(start2);
     cudaEventDestroy(stop2);
 
-/*
-    // 6. Copy results to host and print
-    std::vector<unsigned int> num_found_results_h1(N);
+
+    // Copy results to host and print
+    /*
+    std::vector<unsigned int> num_found_results_h1(num_faces);
     thrust::copy(num_found_results_dev.begin(), num_found_results_dev.end(), num_found_results_h1.begin());
-    std::vector<unsigned int> buffer_results_h1(N * BUFFER_SIZE);
+    std::vector<unsigned int> buffer_results_h1(num_faces * BUFFER_SIZE);
     thrust::copy(buffer_results_dev.begin(), buffer_results_dev.end(), buffer_results_h1.begin());
 
-    for (unsigned int i = 0; i < triangles.size(); i++) {
+    for (unsigned int i = 0; i < num_faces; i++) {
         std::cout << "i : " << i << " num_found : " << num_found_results_h1[i] << std::endl;
     }
-    for (unsigned int i = 0; i < triangles.size(); i++) {
+    for (unsigned int i = 0; i < num_faces; i++) {
         std::cout << "i : " << i << " buffer: ";
         for (unsigned int j = 0; j < BUFFER_SIZE; j++) {
             std::cout << buffer_results_h1[i * BUFFER_SIZE + j] << " ";
         }
         std::cout << std::endl;
-    }
-*/
+    }*/
+
     cudaEvent_t start3, stop3;
     cudaEventCreate(&start3);
     cudaEventCreate(&stop3);
     cudaEventRecord(start3);
 
     
-    bool isIntersect = lbvh::tri_tri_intersect(triangles_d_raw, buffer_results_raw, num_found_results_raw, N, BUFFER_SIZE);
+    bool isIntersect = lbvh::tri_tri_intersect(triangles_d_raw, buffer_results_raw, num_found_results_raw, num_faces, BUFFER_SIZE);
     
     cudaEventRecord(stop3);
     cudaEventSynchronize(stop3);

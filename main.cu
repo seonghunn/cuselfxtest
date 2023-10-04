@@ -1,4 +1,4 @@
-#include "lbvh.cuh"
+#include "intersect.cuh"
 #include "include/morton_code.cuh"
 #include <igl/read_triangle_mesh.h>
 #include <Eigen/Dense>
@@ -58,9 +58,9 @@ int main(int argc, char *argv[])
 
     unsigned int num_vertices = V_vector.size()/3;
     unsigned int num_faces = F_vector.size()/3;
-    thrust::device_vector<unsigned int> adj_faces_dev(num_faces * FACES_SIZE, 0xFFFFFFFF);
-    lbvh::adj_faces(V_vector, F_vector, adj_faces_dev, num_faces);
-    bool isIntersect = lbvh::self_intersect(V_vector, F_vector, adj_faces_dev);
+    //thrust::device_vector<unsigned int> adj_faces_dev(num_faces * FACES_SIZE, 0xFFFFFFFF);
+    //lbvh::adj_faces(V_vector, F_vector, adj_faces_dev, num_faces);
+    bool isIntersect = lbvh::self_intersect(V_vector, F_vector);
     //bool tri_intersect = lbvh::tri_tri_intersect(triangles);
     
     // 1 : self-intersect 0 : self-intersection free
