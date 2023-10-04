@@ -1,0 +1,14 @@
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/CMakeFiles/lbvh.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/CMakeFiles/edit_cache.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/CMakeFiles/rebuild_cache.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/CMakeFiles/list_install_components.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/CMakeFiles/install.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/CMakeFiles/install/local.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/CMakeFiles/install/strip.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl/CMakeFiles/igl_core.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl/CMakeFiles/edit_cache.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl/CMakeFiles/rebuild_cache.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl/CMakeFiles/list_install_components.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl/CMakeFiles/install.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl/CMakeFiles/install/local.dir
+/seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl/CMakeFiles/install/strip.dir
