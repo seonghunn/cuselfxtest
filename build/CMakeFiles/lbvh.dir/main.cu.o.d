@@ -1071,18 +1071,18 @@ CMakeFiles/lbvh.dir/main.cu.o : /seoh_fast_cephfs/bvh-gpu/lbvh/main.cu \
     /seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/eigen-src/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
     /seoh_fast_cephfs/bvh-gpu/lbvh/include/self_intersect.cuh \
     /seoh_fast_cephfs/bvh-gpu/lbvh/include/adj_faces.cuh \
-    /seoh_fast_cephfs/lib/libigl/include/igl/read_triangle_mesh.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/igl_inline.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/read_triangle_mesh.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/list_to_matrix.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/list_to_matrix.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/max_size.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/max_size.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/min_size.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/min_size.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readMSH.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readMSH.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/MshLoader.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/read_triangle_mesh.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/igl_inline.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/read_triangle_mesh.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/list_to_matrix.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/list_to_matrix.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/max_size.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/max_size.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/min_size.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/min_size.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readMSH.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readMSH.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/MshLoader.h \
     /usr/include/c++/11/fstream \
     /usr/include/c++/11/bits/codecvt.h \
     /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
@@ -1093,56 +1093,56 @@ CMakeFiles/lbvh.dir/main.cu.o : /seoh_fast_cephfs/bvh-gpu/lbvh/main.cu \
     /usr/include/c++/11/bits/stl_map.h \
     /usr/include/c++/11/bits/stl_multimap.h \
     /usr/include/c++/11/bits/erase_if.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/MshLoader.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readMESH.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readMESH.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readOBJ.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readOBJ.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/polygon_corners.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/polygon_corners.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/polygons_to_triangles.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/polygons_to_triangles.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readOFF.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readOFF.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readSTL.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readSTL.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/IGL_ASSERT.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/string_utils.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/string_utils.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/read_file_binary.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/read_file_binary.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/FileMemoryStream.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readPLY.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/tinyply.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/MshLoader.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readMESH.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readMESH.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readOBJ.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readOBJ.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/polygon_corners.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/polygon_corners.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/polygons_to_triangles.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/polygons_to_triangles.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readOFF.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readOFF.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readSTL.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readSTL.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/IGL_ASSERT.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/string_utils.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/string_utils.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/read_file_binary.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/read_file_binary.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/FileMemoryStream.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readPLY.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/tinyply.h \
     /usr/include/c++/11/unordered_map \
     /usr/include/c++/11/bits/hashtable.h \
     /usr/include/c++/11/bits/hashtable_policy.h \
     /usr/include/c++/11/bits/enable_special_members.h \
     /usr/include/c++/11/bits/unordered_map.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/tinyply.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readPLY.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/tinyply.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readPLY.cpp \
     /usr/include/c++/11/set \
     /usr/include/c++/11/bits/stl_set.h \
     /usr/include/c++/11/bits/stl_multiset.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readWRL.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/readWRL.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/pathinfo.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/pathinfo.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/dirname.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/dirname.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/verbose.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/basename.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/basename.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/boundary_facets.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/boundary_facets.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/face_occurrences.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/face_occurrences.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/matrix_to_list.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/matrix_to_list.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/sort.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/sort.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/SortableRow.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/slice.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readWRL.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/readWRL.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/pathinfo.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/pathinfo.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/dirname.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/dirname.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/verbose.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/basename.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/basename.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/boundary_facets.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/boundary_facets.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/face_occurrences.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/face_occurrences.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/matrix_to_list.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/matrix_to_list.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/sort.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/sort.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/SortableRow.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/slice.h \
     /seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/eigen-src/Eigen/Sparse \
     /seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/eigen-src/Eigen/SparseCore \
     /seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/eigen-src/Eigen/src/SparseCore/SparseUtil.h \
@@ -1214,14 +1214,14 @@ CMakeFiles/lbvh.dir/main.cu.o : /seoh_fast_cephfs/bvh-gpu/lbvh/main.cu \
     /usr/include/c++/11/list \
     /usr/include/c++/11/bits/stl_list.h \
     /usr/include/c++/11/bits/list.tcc \
-    /seoh_fast_cephfs/lib/libigl/include/igl/slice.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/colon.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/colon.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/LinSpaced.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/IndexComparison.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/parallel_for.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/default_num_threads.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/default_num_threads.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/slice.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/colon.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/colon.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/LinSpaced.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/IndexComparison.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/parallel_for.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/default_num_threads.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/default_num_threads.cpp \
     /usr/include/c++/11/thread \
     /usr/include/c++/11/bits/std_thread.h \
     /usr/include/c++/11/bits/this_thread_sleep.h \
@@ -1229,11 +1229,11 @@ CMakeFiles/lbvh.dir/main.cu.o : /seoh_fast_cephfs/bvh-gpu/lbvh/main.cu \
     /usr/include/c++/11/ratio \
     /usr/include/c++/11/ctime \
     /usr/include/c++/11/bits/parse_numbers.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/unique_rows.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/unique_rows.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/sortrows.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/sortrows.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/get_seconds.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/get_seconds.cpp \
-    /seoh_fast_cephfs/lib/libigl/include/igl/accumarray.h \
-    /seoh_fast_cephfs/lib/libigl/include/igl/accumarray.cpp
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/unique_rows.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/unique_rows.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/sortrows.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/sortrows.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/get_seconds.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/get_seconds.cpp \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/accumarray.h \
+    /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include/igl/accumarray.cpp

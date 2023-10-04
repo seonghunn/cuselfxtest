@@ -78,6 +78,6 @@ _deps/libigl/CMakeFiles/igl_core.dir/clean:
 .PHONY : _deps/libigl/CMakeFiles/igl_core.dir/clean
 
 _deps/libigl/CMakeFiles/igl_core.dir/depend:
-	cd /seoh_fast_cephfs/bvh-gpu/lbvh/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /seoh_fast_cephfs/bvh-gpu/lbvh /seoh_fast_cephfs/lib/libigl /seoh_fast_cephfs/bvh-gpu/lbvh/build /seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl /seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl/CMakeFiles/igl_core.dir/DependInfo.cmake --color=$(COLOR)
+	cd /seoh_fast_cephfs/bvh-gpu/lbvh/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /seoh_fast_cephfs/bvh-gpu/lbvh /seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl /seoh_fast_cephfs/bvh-gpu/lbvh/build /seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl /seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/libigl/CMakeFiles/igl_core.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : _deps/libigl/CMakeFiles/igl_core.dir/depend
 

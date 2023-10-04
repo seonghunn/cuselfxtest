@@ -4,7 +4,7 @@
 # compile CUDA with /usr/local/cuda/bin/nvcc
 CUDA_DEFINES = 
 
-CUDA_INCLUDES = -I/seoh_fast_cephfs/bvh-gpu/lbvh/include -I/seoh_fast_cephfs/lib/libigl/include -isystem=/seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/eigen-src
+CUDA_INCLUDES = -I/seoh_fast_cephfs/bvh-gpu/lbvh/include -I/seoh_fast_cephfs/bvh-gpu/lbvh/external/libigl/include -isystem=/seoh_fast_cephfs/bvh-gpu/lbvh/build/_deps/eigen-src
 
-CUDA_FLAGS =  -g -O3 --expt-extended-lambda -O3 -DNDEBUG -std=c++14
+CUDA_FLAGS =  -g -O3 --expt-extended-lambda -std=c++14
 

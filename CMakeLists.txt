@@ -9,7 +9,12 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CUDA_STANDARD 14)
 
 # Add libigl to the project
-add_subdirectory(/seoh_fast_cephfs/lib/libigl ${CMAKE_BINARY_DIR}/_deps/libigl)
+if(DEFINED ENV{LIBIGL_DIR})
+    add_subdirectory($ENV{LIBIGL_DIR} ${CMAKE_BINARY_DIR}/_deps/libigl)
+else()
+    message(FATAL_ERROR "Please set the LIBIGL_DIR environment variable to your libigl directory.")
+endif()
+
 
 # NVCC flags (for CUDA)
 # You can uncomment this if you want to switch between Debug and Release flags
