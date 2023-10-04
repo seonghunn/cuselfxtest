@@ -1,1 +1,1 @@
-/usr/bin/g++ CMakeFiles/lbvh.dir/main.cu.o -o lbvh  -lcudadevrt -lcudart_static -lrt -lpthread -ldl  -L"/usr/local/cuda/targets/x86_64-linux/lib/stubs" -L"/usr/local/cuda/targets/x86_64-linux/lib"
+/usr/bin/g++ @CMakeFiles/lbvh.dir/objects1.rsp -o lbvh @CMakeFiles/lbvh.dir/linkLibs.rsp -L"/usr/local/cuda/targets/x86_64-linux/lib/stubs" -L"/usr/local/cuda/targets/x86_64-linux/lib"

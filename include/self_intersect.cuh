@@ -11,7 +11,7 @@
 using namespace std;
 
 namespace lbvh{
-    bool self_intersect(const std::vector<Triangle>& triangles, thrust::device_vector<unsigned int>& adj_faces_dev, unsigned int num_vertices, unsigned int num_faces) {
+    bool self_intersect(const vector<float> &V, const vector<unsigned int> &F, thrust::device_vector<unsigned int>& adj_faces_dev) {
     
     /*
     // 1. Create a host vector of appropriate size.
@@ -37,6 +37,82 @@ namespace lbvh{
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
+    // init triangle list ----------------------
+    unsigned int num_vertices = V.size()/3;
+    unsigned int num_faces = F.size()/3;
+
+    std::vector<Triangle> triangles;
+    thrust::device_vector<float> V_d = V;
+    thrust::device_vector<unsigned int> F_d = F;
+    thrust::device_vector<Triangle> triangles_d(num_faces);
+
+    float* V_d_raw = thrust::raw_pointer_cast(V_d.data());
+    unsigned int* F_d_raw = thrust::raw_pointer_cast(F_d.data());
+    Triangle* triangles_d_raw = thrust::raw_pointer_cast(triangles_d.data());
+
+
+    thrust::for_each(thrust::device,
+                     thrust::make_counting_iterator<std::size_t>(0),
+                     thrust::make_counting_iterator<std::size_t>(num_faces),
+                     [V_d_raw, F_d_raw, triangles_d_raw] __device__(std::size_t idx){
+                        Triangle tri;
+                        unsigned int v0_row = F_d_raw[idx * 3 + 0];
+                        unsigned int v1_row = F_d_raw[idx * 3 + 1];
+                        unsigned int v2_row = F_d_raw[idx * 3 + 2];
+                        tri.v0 = make_float3(V_d_raw[v0_row * 3 + 0], V_d_raw[v0_row * 3 + 1], V_d_raw[v0_row * 3 + 2]);
+                        tri.v1 = make_float3(V_d_raw[v1_row * 3 + 0], V_d_raw[v1_row * 3 + 1], V_d_raw[v1_row * 3 + 2]);
+                        tri.v2 = make_float3(V_d_raw[v2_row * 3 + 0], V_d_raw[v2_row * 3 + 1], V_d_raw[v2_row * 3 + 2]);
+                        triangles_d_raw[idx] = tri;
+
+                        return;
+                     });
+
+
+    // 1. 디바이스에서 호스트로 복사
+std::vector<Triangle> triangles_h(num_faces);
+thrust::copy(triangles_d.begin(), triangles_d.end(), triangles_h.begin());
+
+// 2. 3개의 삼각형 단위로 출력
+for (size_t i = 0; i < triangles_h.size(); i += 3) {
+    for (size_t j = 0; j < 3 && (i + j) < triangles_h.size(); ++j) {
+        const Triangle& tri = triangles_h[i + j];
+        std::cout << "Triangle " << (i + j + 1) << ": "
+                  << "v0(" << tri.v0.x << ", " << tri.v0.y << ", " << tri.v0.z << ") "
+                  << "v1(" << tri.v1.x << ", " << tri.v1.y << ", " << tri.v1.z << ") "
+                  << "v2(" << tri.v2.x << ", " << tri.v2.y << ", " << tri.v2.z << ")"
+                  << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+        // V와 F로부터 삼각형(Triangle) 목록을 초기화합니다.
+
+    for (unsigned int i = 0; i < F.size()/3; i++)
+    {
+        Triangle tri;
+        unsigned int v0_row = F[i * 3 + 0];
+        unsigned int v1_row = F[i * 3 + 1];
+        unsigned int v2_row = F[i * 3 + 2];
+        tri.v0 = make_float3(V[v0_row * 3 + 0], V[v0_row * 3 + 1], V[v0_row * 3 + 2]);
+        tri.v1 = make_float3(V[v1_row * 3 + 0], V[v1_row * 3 + 1], V[v1_row * 3 + 2]);
+        tri.v2 = make_float3(V[v2_row * 3 + 0], V[v2_row * 3 + 1], V[v2_row * 3 + 2]);
+        triangles.push_back(tri);
+    }
+
+    for (unsigned int i = 0; i < triangles.size(); i++)
+{
+    printf("Triangle %d: v0(%f, %f, %f) v1(%f, %f, %f) v2(%f, %f, %f)\n", 
+        i + 1, 
+        triangles[i].v0.x, triangles[i].v0.y, triangles[i].v0.z,
+        triangles[i].v1.x, triangles[i].v1.y, triangles[i].v1.z,
+        triangles[i].v2.x, triangles[i].v2.y, triangles[i].v2.z);
+
+    // If i is 2 (0-indexed), 5, 8, ... then insert a newline for better readability
+    if ((i + 1) % 3 == 0)
+    {
+        printf("\n");
+    }
+}
 
     cudaEvent_t start0, stop0;
     cudaEventCreate(&start0);
@@ -57,10 +133,6 @@ namespace lbvh{
     
     // get device ptr
     const auto bvh_dev = bvh.get_device_repr();
-
-    // copy triangles vector to GPU
-    thrust::device_vector<Triangle> triangles_dev = triangles;
-    Triangle* triangles_raw = thrust::raw_pointer_cast(triangles_dev.data());
 
     std::cout << "testing query_device:overlap ...\n";
 
@@ -215,7 +287,7 @@ namespace lbvh{
     cudaEventRecord(start3);
 
     
-    bool isIntersect = lbvh::tri_tri_intersect(triangles_raw, buffer_results_raw, num_found_results_raw, N, BUFFER_SIZE);
+    bool isIntersect = lbvh::tri_tri_intersect(triangles_d_raw, buffer_results_raw, num_found_results_raw, N, BUFFER_SIZE);
     
     cudaEventRecord(stop3);
     cudaEventSynchronize(stop3);

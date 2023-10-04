@@ -429,12 +429,12 @@ bool tri_tri_intersect(Triangle* d_triangles_raw, unsigned int* query_list_raw, 
     
     // check where is intersection -------------------
     
-    /*const int maxIntersections = N * buffer_size;
+    const int maxIntersections = N * buffer_size;
     unsigned int* d_intersections;
     cudaMalloc((void**)&d_intersections, 3 * maxIntersections * sizeof(unsigned int));
     unsigned int h_val = 0;
     cudaMemcpy(d_intersections + 3 * maxIntersections - 3, &h_val, sizeof(unsigned int), cudaMemcpyHostToDevice); // Counter를 초기화
-*/
+
     //-------------------------
     //std::vector<unsigned int> h_buffer(N * buffer_size);  // 호스트에 저장할 버퍼 (프린트를 위함)
     //thrust::device_vector<unsigned int> dev_buffer(N * buffer_size);
@@ -443,8 +443,8 @@ bool tri_tri_intersect(Triangle* d_triangles_raw, unsigned int* query_list_raw, 
     thrust::for_each(thrust::device,
                     thrust::make_counting_iterator<std::size_t>(0),//0
                     thrust::make_counting_iterator<std::size_t>(N),//N
-                    //[query_list_raw, num_found_list_raw, d_triangles_raw, d_isIntersect, buffer_size, d_intersections, maxIntersections] __device__(std::size_t idx) {
-                    [query_list_raw, num_found_list_raw, d_triangles_raw, d_isIntersect, buffer_size] __device__(std::size_t idx){
+                    [query_list_raw, num_found_list_raw, d_triangles_raw, d_isIntersect, buffer_size, d_intersections, maxIntersections] __device__(std::size_t idx) {
+                    //[query_list_raw, num_found_list_raw, d_triangles_raw, d_isIntersect, buffer_size] __device__(std::size_t idx){
                         bool coplanar;
                         unsigned int num_found = num_found_list_raw[idx];
                         float3 source, target;
@@ -464,13 +464,13 @@ bool tri_tri_intersect(Triangle* d_triangles_raw, unsigned int* query_list_raw, 
                             if(isIntersecting) {
                                 atomicExch(d_isIntersect, 1);
                                 // check where is intersection -------------------
-                                /*
+                                
                                 int pos = atomicAdd(&d_intersections[3 * maxIntersections - 3], 3);
                                 if (pos < 3 * maxIntersections - 3) {
                                     d_intersections[pos] = idx;
                                     d_intersections[pos + 1] = idx_buffer;
                                     d_intersections[pos + 2] = coplanar ? 1 : 0;  // coplanar 정보 저장
-                                }*/
+                                }
                             }
                           }
                         return;
@@ -485,7 +485,7 @@ bool tri_tri_intersect(Triangle* d_triangles_raw, unsigned int* query_list_raw, 
     }
 */
   //print where is intersection ----------
-  /*
+  
     unsigned int* h_intersections = new unsigned int[3 * maxIntersections];
     cudaMemcpy(h_intersections, d_intersections, 3 * maxIntersections * sizeof(unsigned int), cudaMemcpyDeviceToHost);
 
@@ -493,13 +493,13 @@ bool tri_tri_intersect(Triangle* d_triangles_raw, unsigned int* query_list_raw, 
         printf("Intersection between triangle %d and triangle %d. Coplanar: %s\n", 
             h_intersections[i], h_intersections[i + 1], h_intersections[i + 2] ? "Yes" : "No");
     }
-    */
+    
   // ----------------
 
     cudaMemcpy(&h_isIntersect, d_isIntersect, sizeof(unsigned int), cudaMemcpyDeviceToHost);
 
-    //delete[] h_intersections;
-    //cudaFree(d_intersections);
+    delete[] h_intersections;
+    cudaFree(d_intersections);
     cudaFree(d_isIntersect);
 
     return h_isIntersect == 1;

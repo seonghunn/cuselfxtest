@@ -11,8 +11,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/seoh_fast_cephfs/bvh-gpu/lbvh/main.cu" "CMakeFiles/lbvh.dir/main.cu.o" "gcc" "CMakeFiles/lbvh.dir/main.cu.o.d"
   )
 
-# Targets to which this target links.
-set(CMAKE_TARGET_LINKED_INFO_FILES
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
   )
 
 # Fortran module output directory.

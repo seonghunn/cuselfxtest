@@ -43,9 +43,10 @@ int main(int argc, char *argv[])
 
 
     
-    std::vector<Triangle> triangles;
+
 
     // V와 F로부터 삼각형(Triangle) 목록을 초기화합니다.
+    /*
     for (int i = 0; i < F.rows(); i++)
     {
         Triangle tri;
@@ -53,13 +54,13 @@ int main(int argc, char *argv[])
         tri.v1 = make_float3(V(F(i, 1), 0), V(F(i, 1), 1), V(F(i, 1), 2));
         tri.v2 = make_float3(V(F(i, 2), 0), V(F(i, 2), 1), V(F(i, 2), 2));
         triangles.push_back(tri);
-    }
+    }*/
 
     unsigned int num_vertices = V_vector.size()/3;
     unsigned int num_faces = F_vector.size()/3;
     thrust::device_vector<unsigned int> adj_faces_dev(num_faces * FACES_SIZE, 0xFFFFFFFF);
     lbvh::adj_faces(V_vector, F_vector, adj_faces_dev, num_faces);
-    bool isIntersect = lbvh::self_intersect(triangles, adj_faces_dev, num_vertices, num_faces);
+    bool isIntersect = lbvh::self_intersect(V_vector, F_vector, adj_faces_dev);
     //bool tri_intersect = lbvh::tri_tri_intersect(triangles);
     
     // 1 : self-intersect 0 : self-intersection free
