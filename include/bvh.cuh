@@ -252,7 +252,8 @@ namespace lbvh
     public:
         template <typename InputIterator>
         bvh(InputIterator first, InputIterator last, bool query_host_enabled = false)
-            : objects_h_(first, last), objects_d_(objects_h_),
+            : //objects_h_(first, last), objects_d_(objects_h_),
+              objects_d_(first, last),
               query_host_enabled_(query_host_enabled)
         {
             //this->assign(first, last);
@@ -296,7 +297,7 @@ namespace lbvh
 
             this->construct();
             // CUDA 동기화 추가
-            //cudaDeviceSynchronize();
+            cudaDeviceSynchronize();
 
             // 종료 이벤트를 기록합니다.
             cudaEventRecord(stop);
@@ -361,13 +362,13 @@ namespace lbvh
 
         void construct()
         {
-            assert(objects_h_.size() == objects_d_.size());
-            if (objects_h_.size() == 0u)
-            {
-                return;
-            }
+            //assert(objects_h_.size() == objects_d_.size());
+            //if (objects_h_.size() == 0u)
+            //{
+            //    return;
+            //}
 
-            const unsigned int num_objects = objects_h_.size();
+            const unsigned int num_objects = objects_d_.size();
             const unsigned int num_internal_nodes = num_objects - 1;
             const unsigned int num_nodes = num_objects * 2 - 1;
 
