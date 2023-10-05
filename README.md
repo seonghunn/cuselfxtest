@@ -1,10 +1,8 @@
-# Self intersection check with Parallel lbvh
-## Code is run in parallel at GPU
-
+# Self-intersection check with lbvh using GPU
 ```
 chmod +x setup.sh
+./setup.sh
 cd build
 make
-
-./lbvh <mesh filename>
+./lbvh <mesh filename in current path>
 ```
