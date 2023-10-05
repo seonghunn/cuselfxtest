@@ -94,7 +94,7 @@ namespace lbvh{
     cudaEventSynchronize(stop0);
     float milliseconds0 = 0;
     cudaEventElapsedTime(&milliseconds0, start0, stop0);
-    printf("bvh constructor call runtime %f ms\n", milliseconds0);
+    printf("bvh construction runtime %f ms\n", milliseconds0);
     cudaEventDestroy(start0);
     cudaEventDestroy(stop0);
 

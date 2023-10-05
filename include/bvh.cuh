@@ -288,31 +288,31 @@ namespace lbvh
 */
 
             // CUDA 이벤트를 선언합니다.
-            cudaEvent_t start, stop;
-            cudaEventCreate(&start);
-            cudaEventCreate(&stop);
+            //cudaEvent_t start, stop;
+            //cudaEventCreate(&start);
+            //cudaEventCreate(&stop);
 
             // 시작 이벤트를 기록합니다.
-            cudaEventRecord(start);
+            //cudaEventRecord(start);
 
             this->construct();
             // CUDA 동기화 추가
-            cudaDeviceSynchronize();
+            //cudaDeviceSynchronize();
 
             // 종료 이벤트를 기록합니다.
-            cudaEventRecord(stop);
-            cudaEventSynchronize(stop);
+            //cudaEventRecord(stop);
+            //cudaEventSynchronize(stop);
 
             // 시작 및 종료 이벤트 사이의 경과 시간을 계산합니다.
-            float milliseconds = 0;
-            cudaEventElapsedTime(&milliseconds, start, stop);
+            //float milliseconds = 0;
+            //cudaEventElapsedTime(&milliseconds, start, stop);
 
             // 출력
-            std::cout << "bvh construct took : " << milliseconds << " ms" << std::endl;
+            //std::cout << "bvh construct took : " << milliseconds << " ms" << std::endl;
 
             // 생성된 이벤트를 제거합니다.
-            cudaEventDestroy(start);
-            cudaEventDestroy(stop);
+            //cudaEventDestroy(start);
+            //cudaEventDestroy(stop);
         }
 
         bvh() = default;
