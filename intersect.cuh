@@ -1,5 +1,5 @@
-#ifndef LBVH_LBVH_CUH
-#define LBVH_LBVH_CUH
+#ifndef LBVH_INTERSECT_CUH
+#define LBVH_INTERSECT_CUH
 
 #include "include/aabb.cuh"
 #include "include/bvh.cuh"
