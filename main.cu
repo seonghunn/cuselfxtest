@@ -17,8 +17,8 @@ int main(int argc, char *argv[])
     string input_filename(argv[1]);
     Eigen::MatrixXd V;
     Eigen::MatrixXi F;
-    clock_t start_cpu, end_cpu;
-    start_cpu = clock();
+    //clock_t start_cpu, end_cpu;
+    //start_cpu = clock();
     igl::read_triangle_mesh(INPUT_PATH + input_filename, V, F);
 
     const std::size_t N = F.rows();
@@ -60,13 +60,21 @@ int main(int argc, char *argv[])
     unsigned int num_faces = F_vector.size()/3;
     //thrust::device_vector<unsigned int> adj_faces_dev(num_faces * FACES_SIZE, 0xFFFFFFFF);
     //lbvh::adj_faces(V_vector, F_vector, adj_faces_dev, num_faces);
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
     bool isIntersect = lbvh::self_intersect(V_vector, F_vector);
     //bool tri_intersect = lbvh::tri_tri_intersect(triangles);
     
     // 1 : self-intersect 0 : self-intersection free
-    std::cout << "self intersect test : " << isIntersect <<std::endl;
-    end_cpu = clock();
-    std::cout<<"total runtime : "<<(double)(end_cpu - start_cpu)/ CLOCKS_PER_SEC<<" sec"<<std::endl;
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    printf("Total self-intersect test runtime in main.cu %f ms\n", milliseconds);
+    std::cout << "self intersect test : " << (isIntersect ? "self-intersect" : "self-intersect-free") << std::endl;
+    //std::cout<<"total runtime : "<<(double)(end_cpu - start_cpu)/ CLOCKS_PER_SEC<<" sec"<<std::endl;
 
     //lbvh::parallel_adj_faces(V, F);
 
