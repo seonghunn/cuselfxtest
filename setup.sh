@@ -1,8 +1,17 @@
 #!/bin/bash
 
-# Ensure external directory exists
-rm -rf external
-rm -rf build
+# If external directory exists, remove it
+if [ -d "external" ]; then
+    echo "Removing existing 'external' directory..."
+    rm -rf external
+fi
+
+# If build directory exists, remove it
+if [ -d "build" ]; then
+    echo "Removing existing 'build' directory..."
+    rm -rf build
+fi
+
 
 mkdir -p external
 
