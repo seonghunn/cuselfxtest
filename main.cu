@@ -13,8 +13,8 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-    string INPUT_PATH = "/seoh_fast_cephfs/bvh-gpu/model/";
-    //string INPUT_PATH = "";
+    //string INPUT_PATH = "/seoh_fast_cephfs/bvh-gpu/model/";
+    string INPUT_PATH = "";
     string input_filename(argv[1]);
     Eigen::MatrixXd V;
     Eigen::MatrixXi F;
