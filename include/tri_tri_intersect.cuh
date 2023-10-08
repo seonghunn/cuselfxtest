@@ -487,13 +487,13 @@ bool tri_tri_intersect(Triangle<float3>* d_triangles_raw, unsigned int* query_li
   //print where is intersection ----------
   
   
-    unsigned int* h_intersections = new unsigned int[3 * maxIntersections];
-    cudaMemcpy(h_intersections, d_intersections, 3 * maxIntersections * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    // unsigned int* h_intersections = new unsigned int[3 * maxIntersections];
+    // cudaMemcpy(h_intersections, d_intersections, 3 * maxIntersections * sizeof(unsigned int), cudaMemcpyDeviceToHost);
 
-    for (int i = 0; i < h_intersections[3 * maxIntersections - 3]; i += 3) {    
-        printf("Intersection between triangle %d and triangle %d. Coplanar: %s\n", 
-            h_intersections[i], h_intersections[i + 1], h_intersections[i + 2] ? "Yes" : "No");
-    }
+    // for (int i = 0; i < h_intersections[3 * maxIntersections - 3]; i += 3) {    
+    //     printf("Intersection between triangle %d and triangle %d. Coplanar: %s\n", 
+    //         h_intersections[i], h_intersections[i + 1], h_intersections[i + 2] ? "Yes" : "No");
+    // }
     
   // ----------------
 

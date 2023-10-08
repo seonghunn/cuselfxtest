@@ -11,7 +11,7 @@
 using namespace std;
 
 namespace lbvh{
-    bool self_intersect(const vector<float> &V, const vector<unsigned int> &F) {
+    bool self_intersect(Vertex<float> *V, Face<int> *F, unsigned int num_vertices, unsigned int num_faces) {
     
     /*
     // 1. Create a host vector of appropriate size.
@@ -44,34 +44,33 @@ namespace lbvh{
     cudaEventCreate(&stop_init);
     cudaEventRecord(start_init);
 
-    unsigned int num_vertices = V.size()/3;
-    unsigned int num_faces = F.size()/3;
+    //unsigned int num_vertices = V.size()/3;
+    //unsigned int num_faces = F.size()/3;
 
-    thrust::device_vector<float> V_d = V;
-    thrust::device_vector<unsigned int> F_d = F;
+    thrust::device_vector<Vertex<float>> V_d(V, V+num_vertices);
+    thrust::device_vector<Face<int>> F_d(F, F+num_faces);
     thrust::device_vector<Triangle<float3>> triangles_d(num_faces);
 
-    float* V_d_raw = thrust::raw_pointer_cast(V_d.data());
-    unsigned int* F_d_raw = thrust::raw_pointer_cast(F_d.data());
+    Vertex<float>* V_d_raw = thrust::raw_pointer_cast(V_d.data());
+    Face<int>* F_d_raw = thrust::raw_pointer_cast(F_d.data());
     Triangle<float3>* triangles_d_raw = thrust::raw_pointer_cast(triangles_d.data());
-
 
     thrust::for_each(thrust::device,
                      thrust::make_counting_iterator<std::size_t>(0),
                      thrust::make_counting_iterator<std::size_t>(num_faces),
                      [V_d_raw, F_d_raw, triangles_d_raw] __device__(std::size_t idx){
                         Triangle<float3> tri;
-                        unsigned int v0_row = F_d_raw[idx * 3 + 0];
-                        unsigned int v1_row = F_d_raw[idx * 3 + 1];
-                        unsigned int v2_row = F_d_raw[idx * 3 + 2];
-                        tri.v0 = make_float3(V_d_raw[v0_row * 3 + 0], V_d_raw[v0_row * 3 + 1], V_d_raw[v0_row * 3 + 2]);
-                        tri.v1 = make_float3(V_d_raw[v1_row * 3 + 0], V_d_raw[v1_row * 3 + 1], V_d_raw[v1_row * 3 + 2]);
-                        tri.v2 = make_float3(V_d_raw[v2_row * 3 + 0], V_d_raw[v2_row * 3 + 1], V_d_raw[v2_row * 3 + 2]);
+                        int v0_row = F_d_raw[idx].i;
+                        int v1_row = F_d_raw[idx].j;
+                        int v2_row = F_d_raw[idx].k;
+                        tri.v0 = make_float3(V_d_raw[v0_row].x, V_d_raw[v0_row].y, V_d_raw[v0_row].z);
+                        tri.v1 = make_float3(V_d_raw[v1_row].x, V_d_raw[v1_row].y, V_d_raw[v1_row].z);
+                        tri.v2 = make_float3(V_d_raw[v2_row].x, V_d_raw[v2_row].y, V_d_raw[v2_row].z);
                         triangles_d_raw[idx] = tri;
 
                         return;
                      });
-
+        cout<<"dodo"<<endl;
     cudaEventRecord(stop_init);
     cudaEventSynchronize(stop_init);
     float milliseconds_init = 0;
@@ -207,10 +206,18 @@ namespace lbvh{
                         for(unsigned int i = 0; i < num_found; i++){
                             unsigned int query_idx = buffer_results_raw[idx * BUFFER_SIZE + i];
                             bool flag = false;
+
+                            // Retrieve faces for idx and query_idx
+                            Face<int> current_face = F_d_raw[idx];
+                            Face<int> query_face = F_d_raw[query_idx];
+                            int vertices_current[] = {current_face.i, current_face.j, current_face.k};
+                            int vertices_query[] = {query_face.i, query_face.j, query_face.k};
+                            
                             for(unsigned int j = 0; j < 3; j++){
-                                unsigned int face_current = F_d_raw[idx * 3 + j];
+                                int vertex_current = vertices_current[j];
+                                
                                 for(unsigned int k = 0; k < 3; k++){
-                                    if(face_current == F_d_raw[query_idx * 3 + k]){
+                                    if(vertex_current == vertices_query[k]){
                                         flag = true;
                                         buffer_results_raw[idx * BUFFER_SIZE + i] = 0xFFFFFFFF;
                                         break;

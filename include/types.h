@@ -19,6 +19,14 @@ struct Vertex
 };
 
 template <typename T>
+struct Face
+{
+    T i, j, k;
+
+    inline __device__ __host__ T *data_ptr() { return &i; }
+};
+
+template <typename T>
 struct Triangle
 {
     T v0, v1, v2; // 삼각형의 3개 꼭짓점

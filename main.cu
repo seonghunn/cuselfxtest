@@ -24,26 +24,23 @@ int main(int argc, char *argv[])
 
     const std::size_t N = F.rows();
 
-    // init V vector and F vector
-    std::vector<float> V_vector(V.size());
-    std::vector<unsigned int> F_vector(F.size());
+    // Vertex and Faces
+    Vertex<float>* V_array = new Vertex<float>[V.rows()];
+    Face<int>* F_array = new Face<int>[F.rows()];
 
-    int index = 0;
+    // Copy data Eigen to array
     for (int i = 0; i < V.rows(); ++i)
     {
-        for (int j = 0; j < V.cols(); ++j)
-        {
-            V_vector[index++] = static_cast<float>(V(i, j));
-        }
+        V_array[i] = {
+            static_cast<float>(V(i, 0)), 
+            static_cast<float>(V(i, 1)), 
+            static_cast<float>(V(i, 2))
+        };
     }
 
-    index = 0;
     for (int i = 0; i < F.rows(); ++i)
     {
-        for (int j = 0; j < F.cols(); ++j)
-        {
-            F_vector[index++] = static_cast<unsigned int>(F(i, j));
-        }
+        F_array[i] = {F(i, 0), F(i, 1), F(i, 2)};
     }
 
     // V와 F로부터 삼각형(Triangle) 목록을 초기화합니다.
@@ -57,15 +54,15 @@ int main(int argc, char *argv[])
         triangles.push_back(tri);
     }*/
 
-    unsigned int num_vertices = V_vector.size() / 3;
-    unsigned int num_faces = F_vector.size() / 3;
+    unsigned int num_vertices = V.rows();
+    unsigned int num_faces = F.rows();
     // thrust::device_vector<unsigned int> adj_faces_dev(num_faces * FACES_SIZE, 0xFFFFFFFF);
     // lbvh::adj_faces(V_vector, F_vector, adj_faces_dev, num_faces);
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
-    bool isIntersect = lbvh::self_intersect(V_vector, F_vector);
+    bool isIntersect = lbvh::self_intersect(V_array, F_array, num_vertices, num_faces);
     // bool tri_intersect = lbvh::tri_tri_intersect(triangles);
 
     // 1 : self-intersect 0 : self-intersection free
@@ -110,6 +107,8 @@ int main(int argc, char *argv[])
     std::cout<<"triangle intersection test 3d : "<<testtest<<
     " "<<source<<" "<<target<<std::endl;
 */
+    delete[] V_array;
+    delete[] F_array;
 
     return 0;
 }
