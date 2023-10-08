@@ -317,9 +317,9 @@ bool tri_tri_intersection_test_3d(
   //using RowVector3D = typename Eigen::Matrix<Scalar, 1, 3>;
 
   float dp1, dq1, dr1, dp2, dq2, dr2;
-  float3 v1, v2, v;
-  float3 N1, N2, N;
-  float alpha;
+  float3 v1, v2;//, v;
+  float3 N1, N2;//, N;
+  //float alpha;
   // Compute distance signs  of p1, q1 and r1 
   // to the plane of triangle(p2,q2,r2)
 
@@ -440,6 +440,7 @@ bool tri_tri_intersect(Triangle<float3>* d_triangles_raw, unsigned int* query_li
     //thrust::device_vector<unsigned int> dev_buffer(N * buffer_size);
     //unsigned int* dev_buffer_raw = thrust::raw_pointer_cast(dev_buffer.data());
 
+    // d_intersection : where is the intersection occur?
     thrust::for_each(thrust::device,
                     thrust::make_counting_iterator<std::size_t>(0),//0
                     thrust::make_counting_iterator<std::size_t>(N),//N
