@@ -1,4 +1,4 @@
-#include "intersect.cuh"
+#include "selfx.cuh"
 #include "include/morton_code.cuh"
 #include <igl/read_triangle_mesh.h>
 #include <Eigen/Dense>
@@ -13,7 +13,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-    //string INPUT_PATH = "/seoh_fast_cephfs/bvh-gpu/model/";
+    //string INPUT_PATH = "/seoh_fast_cephfs/model/";
     string INPUT_PATH = "";
     string input_filename(argv[1]);
     Eigen::MatrixXd V;
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
-    bool isIntersect = lbvh::self_intersect(V_array, F_array, num_vertices, num_faces);
+    bool isIntersect = selfx::self_intersect(V_array, F_array, num_vertices, num_faces);
     // bool tri_intersect = lbvh::tri_tri_intersect(triangles);
 
     // 1 : self-intersect 0 : self-intersection free

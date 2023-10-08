@@ -3,15 +3,9 @@
 #include "types.h"
 #include "math.cuh"
 #include <thrust/for_each.h>
-#include <Eigen/Dense>
 #include <vector>
 
-__device__
-Eigen::RowVector3d float3ToRowVector3d(float3 v) {
-    return Eigen::RowVector3d(static_cast<double>(v.x), static_cast<double>(v.y), static_cast<double>(v.z));
-}
-
-namespace lbvh{
+namespace selfx{
 
 __device__ __host__
 inline float ORIENT_2D(const float2& a, const float2& b, const float2& c)

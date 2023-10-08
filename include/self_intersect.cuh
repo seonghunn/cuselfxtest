@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace lbvh{
+namespace selfx{
     bool self_intersect(Vertex<float> *V, Face<int> *F, unsigned int num_vertices, unsigned int num_faces) {
     
     /*
@@ -263,7 +263,7 @@ namespace lbvh{
     cudaEventRecord(start3);
 
     
-    bool isIntersect = lbvh::tri_tri_intersect(triangles_d_raw, buffer_results_raw, num_found_results_raw, num_faces, BUFFER_SIZE);
+    bool isIntersect = selfx::tri_tri_intersect(triangles_d_raw, buffer_results_raw, num_found_results_raw, num_faces, BUFFER_SIZE);
     
     cudaEventRecord(stop3);
     cudaEventSynchronize(stop3);

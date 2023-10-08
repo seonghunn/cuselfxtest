@@ -4,12 +4,11 @@
 #include <thrust/for_each.h>
 #include <vector>
 #include "types.h"
-#include <Eigen/Dense>
 #include <thrust/device_vector.h>
 
 //TODO: init adj faces
 using namespace std;
-namespace lbvh{
+namespace selfx{
 
     /*
 __global__ void computeAdjFaces(const unsigned int* d_F, unsigned int* d_adj_faces, unsigned int numTriangles, unsigned int FACES_SIZE) {

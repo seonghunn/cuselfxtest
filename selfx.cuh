@@ -1,5 +1,5 @@
-#ifndef LBVH_INTERSECT_CUH
-#define LBVH_INTERSECT_CUH
+#ifndef LBVH_SELFX_CUH
+#define LBVH_SELFX_CUH
 
 #include "include/aabb.cuh"
 #include "include/bvh.cuh"
@@ -12,4 +12,4 @@
 #include "include/types.h"
 #include "include/adj_faces.cuh"
 #include "include/math.cuh"
-#endif// LBVH_LBVH_CUH
+#endif// LBVH_SELFX_CUH
