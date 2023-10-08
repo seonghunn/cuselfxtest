@@ -49,18 +49,18 @@ namespace lbvh{
 
     thrust::device_vector<float> V_d = V;
     thrust::device_vector<unsigned int> F_d = F;
-    thrust::device_vector<Triangle> triangles_d(num_faces);
+    thrust::device_vector<Triangle<float3>> triangles_d(num_faces);
 
     float* V_d_raw = thrust::raw_pointer_cast(V_d.data());
     unsigned int* F_d_raw = thrust::raw_pointer_cast(F_d.data());
-    Triangle* triangles_d_raw = thrust::raw_pointer_cast(triangles_d.data());
+    Triangle<float3>* triangles_d_raw = thrust::raw_pointer_cast(triangles_d.data());
 
 
     thrust::for_each(thrust::device,
                      thrust::make_counting_iterator<std::size_t>(0),
                      thrust::make_counting_iterator<std::size_t>(num_faces),
                      [V_d_raw, F_d_raw, triangles_d_raw] __device__(std::size_t idx){
-                        Triangle tri;
+                        Triangle<float3> tri;
                         unsigned int v0_row = F_d_raw[idx * 3 + 0];
                         unsigned int v1_row = F_d_raw[idx * 3 + 1];
                         unsigned int v2_row = F_d_raw[idx * 3 + 2];
@@ -86,7 +86,7 @@ namespace lbvh{
     cudaEventCreate(&stop0);
     cudaEventRecord(start0);
 
-    lbvh::bvh<float, Triangle, aabb_getter> bvh(triangles_d.begin(), triangles_d.end(), false);
+    lbvh::bvh<float, Triangle<float3>, aabb_getter> bvh(triangles_d.begin(), triangles_d.end(), false);
     // get device ptr
     const auto bvh_dev = bvh.get_device_repr();
     

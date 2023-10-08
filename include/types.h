@@ -10,15 +10,25 @@ std::ostream& operator<<(std::ostream& os, const float3& vec) {
     return os;
 }
 
+template <typename T>
+struct Vertex
+{
+    T x, y, z;
 
+    inline __device__ __host__ T *data_ptr() { return &x; }
+};
+
+template <typename T>
 struct Triangle
 {
-    float3 v0, v1, v2; // 삼각형의 3개 꼭짓점
+    T v0, v1, v2; // 삼각형의 3개 꼭짓점
+
+    inline __device__ __host__ T *data_ptr() { return &v0; }
 };
 
 struct aabb_getter
 {
-    __device__ lbvh::aabb<float> operator()(const Triangle &tri) const noexcept
+    __device__ lbvh::aabb<float> operator()(const Triangle<float3> &tri) const noexcept
     {
         lbvh::aabb<float> box;
 
