@@ -495,9 +495,10 @@ bool tri_tri_intersect(Triangle<float3>* d_triangles_raw, unsigned int* query_li
     cudaMemcpy(&h_isIntersect, d_isIntersect, sizeof(unsigned int), cudaMemcpyDeviceToHost);
     cudaFree(d_isIntersect);
 
+    // free memory used at intersection check 
+    cudaFree(d_intersections);
     // free memory used at print intersection
     //delete[] h_intersections;
-    //cudaFree(d_intersections);
 
     return h_isIntersect == 1;
 

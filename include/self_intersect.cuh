@@ -70,7 +70,6 @@ namespace selfx{
 
                         return;
                      });
-        cout<<"dodo"<<endl;
     cudaEventRecord(stop_init);
     cudaEventSynchronize(stop_init);
     float milliseconds_init = 0;
@@ -278,17 +277,23 @@ namespace selfx{
     //cout << "CPU runtime : " << (double)(end_cpu - start_cpu) / CLOCKS_PER_SEC << " sec\n";
 
     //cout<<"tri_tri intersect : "<<isIntersect<<endl;
-    bvh.clear();
     cudaDeviceSynchronize();
+    bvh.clear();
+
+    // free Thrust device_vector
+    V_d.clear();
+    F_d.clear();
+    triangles_d.clear();
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
     printf("Total self-intersect test GPU runtime %f ms\n", milliseconds);
-    
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+
     return isIntersect;
     }
-
 }
 
 #endif
