@@ -4,6 +4,7 @@
 #include "math.cuh"
 #include <thrust/for_each.h>
 #include <vector>
+//#include "../src/cusimp.h"
 
 namespace selfx{
 
@@ -391,7 +392,6 @@ bool tri_tri_intersection_test_3d(
 };
 
 // detect point intersection (점끼리 겹쳐도 intersect로 판정)
-// TODO: 리스트에 인접한 삼각형을 제거해야 함
 bool tri_tri_intersect(Triangle<float3>* d_triangles_raw, unsigned int* query_list_raw, unsigned int* num_found_list_raw, int N, unsigned int buffer_size){
     // ... 생략 ...
     /*
@@ -440,6 +440,7 @@ bool tri_tri_intersect(Triangle<float3>* d_triangles_raw, unsigned int* query_li
                     thrust::make_counting_iterator<std::size_t>(N),//N
                     [query_list_raw, num_found_list_raw, d_triangles_raw, d_isIntersect, buffer_size, d_intersections, maxIntersections] __device__(std::size_t idx) {
                     //[query_list_raw, num_found_list_raw, d_triangles_raw, d_isIntersect, buffer_size] __device__(std::size_t idx){
+                        
                         bool coplanar;
                         unsigned int num_found = num_found_list_raw[idx];
                         float3 source, target;
@@ -449,7 +450,7 @@ bool tri_tri_intersect(Triangle<float3>* d_triangles_raw, unsigned int* query_li
 
                         for(unsigned int i = 0; i < num_found; i++){
                             unsigned int idx_buffer = query_list_raw[idx * buffer_size + i];
-                            if(idx_buffer == 0xFFFFFFFF) return;
+                            if(idx_buffer == 0xFFFFFFFF) continue;
                             //dev_buffer_raw[idx*buffer_size+i] = idx_buffer;
                             //printf("queryidx : %d, comp index : %d\n", idx, query_list_raw[idx * buffer_size + i]);
                             float3 p2 = d_triangles_raw[idx_buffer].v0;

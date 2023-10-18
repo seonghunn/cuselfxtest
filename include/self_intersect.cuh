@@ -238,7 +238,7 @@ namespace selfx{
 
 
     // Copy results to host and print
-    /*
+    
     std::vector<unsigned int> num_found_results_h1(num_faces);
     thrust::copy(num_found_results_dev.begin(), num_found_results_dev.end(), num_found_results_h1.begin());
     std::vector<unsigned int> buffer_results_h1(num_faces * BUFFER_SIZE);
@@ -253,7 +253,7 @@ namespace selfx{
             std::cout << buffer_results_h1[i * BUFFER_SIZE + j] << " ";
         }
         std::cout << std::endl;
-    }*/
+    }
 
     // actual triangle - triangle intersection test with query list --------------------------
     cudaEvent_t start3, stop3;
