@@ -34,6 +34,9 @@ std::string toBinary64(unsigned long long int number)
 
 namespace lbvh
 {
+    __host__ __device__ inline int min(int a, int b) {
+    return (a < b) ? a : b;
+    }
     namespace detail
     {
         struct node
@@ -98,7 +101,7 @@ namespace lbvh
 
             // Compute upper bound for the length of the range
 
-            const int delta_min = thrust::min(L_delta, R_delta);
+            const int delta_min = min(L_delta, R_delta);
             int l_max = 2;
             int delta = -1;
             int i_tmp = idx + d * l_max;
@@ -137,7 +140,10 @@ namespace lbvh
             unsigned int jdx = idx + l * d;
             if (d < 0)
             {
-                thrust::swap(idx, jdx); // make it sure that idx < jdx
+                //thrust::swap(idx, jdx); // make it sure that idx < jdx
+                unsigned int temp = idx;
+                idx = jdx;
+                jdx = temp;
             }
             return make_uint2(idx, jdx);
         }
@@ -173,36 +179,78 @@ namespace lbvh
 
             return split;
         }
+
         template <typename Real, typename Object, bool IsConst, typename UInt>
-        void construct_internal_nodes(const basic_device_bvh<Real, Object, IsConst> &self,
-                                      UInt const *node_code, const unsigned int num_objects)
+__global__ void construct_bvh_internal_nodes_kernel(const basic_device_bvh<Real, Object, IsConst> self,
+                                             UInt const *node_code, const unsigned int num_objects)
+{
+    const unsigned int idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if (idx < num_objects - 1)
+    {
+        self.nodes[idx].object_idx = 0xFFFFFFFF;  // internal nodes
+
+        const uint2 ij = determine_range(node_code, num_objects, idx);
+        const int gamma = find_split(node_code, num_objects, ij.x, ij.y);
+
+        self.nodes[idx].left_idx = gamma;
+        self.nodes[idx].right_idx = gamma + 1;
+        if (min(ij.x, ij.y) == gamma)
         {
-            thrust::for_each(thrust::device,
-                             thrust::make_counting_iterator<unsigned int>(0),
-                             thrust::make_counting_iterator<unsigned int>(num_objects - 1),
-                             [self, node_code, num_objects] __device__(const unsigned int idx)
-                             {
-                                 self.nodes[idx].object_idx = 0xFFFFFFFF; //  internal nodes
-
-                                 const uint2 ij = determine_range(node_code, num_objects, idx);
-                                 const int gamma = find_split(node_code, num_objects, ij.x, ij.y);
-
-                                 self.nodes[idx].left_idx = gamma;
-                                 self.nodes[idx].right_idx = gamma + 1;
-                                 if (thrust::min(ij.x, ij.y) == gamma)
-                                 {
-                                     self.nodes[idx].left_idx += num_objects - 1;
-                                 }
-                                 if (thrust::max(ij.x, ij.y) == gamma + 1)
-                                 {
-                                     self.nodes[idx].right_idx += num_objects - 1;
-                                 }
-                                 self.nodes[self.nodes[idx].left_idx].parent_idx = idx;
-                                 self.nodes[self.nodes[idx].right_idx].parent_idx = idx;
-                                 return;
-                             });
-            return;
+            self.nodes[idx].left_idx += num_objects - 1;
         }
+        if (max(ij.x, ij.y) == gamma + 1)
+        {
+            self.nodes[idx].right_idx += num_objects - 1;
+        }
+        self.nodes[self.nodes[idx].left_idx].parent_idx = idx;
+        self.nodes[self.nodes[idx].right_idx].parent_idx = idx;
+    }
+}
+
+template <typename Real, typename Object, bool IsConst, typename UInt>
+void construct_internal_nodes(const basic_device_bvh<Real, Object, IsConst> &self,
+                              UInt const *node_code, const unsigned int num_objects)
+{
+    const int threadsPerBlock = 256;
+    const int blocks = (num_objects - 1 + threadsPerBlock - 1) / threadsPerBlock;
+
+    construct_bvh_internal_nodes_kernel<<<blocks, threadsPerBlock>>>(self, node_code, num_objects);
+
+    // Ensure kernel execution completes before returning
+    cudaDeviceSynchronize();
+}
+
+        // template <typename Real, typename Object, bool IsConst, typename UInt>
+        // void construct_internal_nodes(const basic_device_bvh<Real, Object, IsConst> &self,
+        //                               UInt const *node_code, const unsigned int num_objects)
+        // {
+        //     thrust::for_each(thrust::device,
+        //                      thrust::make_counting_iterator<unsigned int>(0),
+        //                      thrust::make_counting_iterator<unsigned int>(num_objects - 1),
+        //                      [self, node_code, num_objects] __device__(const unsigned int idx)
+        //                      {
+        //                          self.nodes[idx].object_idx = 0xFFFFFFFF; //  internal nodes
+
+        //                          const uint2 ij = determine_range(node_code, num_objects, idx);
+        //                          const int gamma = find_split(node_code, num_objects, ij.x, ij.y);
+
+        //                          self.nodes[idx].left_idx = gamma;
+        //                          self.nodes[idx].right_idx = gamma + 1;
+        //                          if (thrust::min(ij.x, ij.y) == gamma)
+        //                          {
+        //                              self.nodes[idx].left_idx += num_objects - 1;
+        //                          }
+        //                          if (thrust::max(ij.x, ij.y) == gamma + 1)
+        //                          {
+        //                              self.nodes[idx].right_idx += num_objects - 1;
+        //                          }
+        //                          self.nodes[self.nodes[idx].left_idx].parent_idx = idx;
+        //                          self.nodes[self.nodes[idx].right_idx].parent_idx = idx;
+        //                          return;
+        //                      });
+        //     return;
+        // }
 
     } // detail
 
@@ -256,6 +304,7 @@ namespace lbvh
               objects_d_(first, last),
               query_host_enabled_(query_host_enabled)
         {
+            
             //this->assign(first, last);
             /*
             // CUDA 이벤트를 선언합니다.
@@ -456,18 +505,18 @@ namespace lbvh
                               });
 
             
-            /*
-                    // 1. device_vector에서 host_vector로 데이터 복사
-            thrust::host_vector<unsigned long long int> morton64_h = morton64;
-            int i = 0;
-            // 2. host_vector의 내용 출력
-            std::cout<<"morton code after unique"<<std::endl;
-            for(const auto& code : morton64_h) {
-                std::bitset<64> afterShift(code);
-                std::cout <<i<<"  "<< afterShift << std::endl;
-                i++;
-            }
-            */
+            
+            //         // 1. device_vector에서 host_vector로 데이터 복사
+            // thrust::host_vector<unsigned long long int> morton64_h = morton64;
+            // int i = 0;
+            // // 2. host_vector의 내용 출력
+            // std::cout<<"morton code after unique"<<std::endl;
+            // for(const auto& code : morton64_h) {
+            //     std::bitset<64> afterShift(code);
+            //     std::cout <<i<<"  "<< afterShift << std::endl;
+            //     i++;
+            // }
+            
             
 
             // --------------------------------------------------------------------
@@ -535,44 +584,44 @@ namespace lbvh
                                  return;
                              });
 
-            /*
-            // 1. nodes_ 데이터를 CPU로 복사하기 위한 벡터 준비
-            std::vector<node_type> host_nodes(this->nodes_.size());
-            std::vector<aabb_type> host_aabbs(this->aabbs_.size()); // aabb_type은 해당 AABB의 데이터 타입이라고 가정합니다.
-
-            // 2. GPU에서 CPU로 데이터 복사
-            thrust::copy(this->nodes_.begin(), this->nodes_.end(), host_nodes.begin());
-            thrust::copy(this->aabbs_.begin(), this->aabbs_.end(), host_aabbs.begin());
-
-            // 3. CPU 상에서 데이터 출력
-            int i = 0;
-            for (const auto& node : host_nodes) {
-                const auto& aabb = host_aabbs[i];
-            std::cout << i << " "
-                      << "Parent idx: " << node.parent_idx
-                      << ", Left idx: " << node.left_idx
-                      << ", Right idx: " << node.right_idx
-                      << ", Object idx: " << node.object_idx
-                      << ", AABB Lower: [" << aabb.lower.x << ", " << aabb.lower.y << ", " << aabb.lower.z << ", " << aabb.lower.w <<"]"
-                      << ", AABB Upper: [" << aabb.upper.x << ", " << aabb.upper.y << ", " << aabb.upper.z << ", " << aabb.upper.w << "]"
-                      << std::endl;
-                i++;
-            }*/
-
-
-
-/*
             
-            // 1. morton64 정렬
-            thrust::sort(morton64.begin(), morton64.end());
+            // // 1. nodes_ 데이터를 CPU로 복사하기 위한 벡터 준비
+            // std::vector<node_type> host_nodes(this->nodes_.size());
+            // std::vector<aabb_type> host_aabbs(this->aabbs_.size()); // aabb_type은 해당 AABB의 데이터 타입이라고 가정합니다.
 
-            // 2. 연속된 중복 제거
-            auto end_unique = thrust::unique(morton64.begin(), morton64.end());
+            // // 2. GPU에서 CPU로 데이터 복사
+            // thrust::copy(this->nodes_.begin(), this->nodes_.end(), host_nodes.begin());
+            // thrust::copy(this->aabbs_.begin(), this->aabbs_.end(), host_aabbs.begin());
 
-            // 3. 모든 원소가 고유한지 확인
-            bool morton64_is_unique = (end_unique == morton64.end());
-            std::cout << "Is morton64 unique? " << morton64_is_unique << std::endl;
-*/
+            // // 3. CPU 상에서 데이터 출력
+            // i = 0;
+            // for (const auto& node : host_nodes) {
+            //     const auto& aabb = host_aabbs[i];
+            // std::cout << i << " "
+            //           << "Parent idx: " << node.parent_idx
+            //           << ", Left idx: " << node.left_idx
+            //           << ", Right idx: " << node.right_idx
+            //           << ", Object idx: " << node.object_idx
+            //           << ", AABB Lower: [" << aabb.lower.x << ", " << aabb.lower.y << ", " << aabb.lower.z << ", " << aabb.lower.w <<"]"
+            //           << ", AABB Upper: [" << aabb.upper.x << ", " << aabb.upper.y << ", " << aabb.upper.z << ", " << aabb.upper.w << "]"
+            //           << std::endl;
+            //     i++;
+            // }
+
+
+
+
+            
+            // // 1. morton64 정렬
+            // thrust::sort(morton64.begin(), morton64.end());
+
+            // // 2. 연속된 중복 제거
+            // auto end_unique = thrust::unique(morton64.begin(), morton64.end());
+
+            // // 3. 모든 원소가 고유한지 확인
+            // bool morton64_is_unique = (end_unique == morton64.end());
+            // std::cout << "Is morton64 unique? " << morton64_is_unique << std::endl;
+
 
             if (this->query_host_enabled_)
             {

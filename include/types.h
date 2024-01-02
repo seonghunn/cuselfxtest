@@ -21,7 +21,7 @@ struct Vertex
 };
 
 template <typename T>
-struct Face
+struct Triangle
 {
     T i, j, k;
 
@@ -29,7 +29,7 @@ struct Face
 };
 
 template <typename T>
-struct Triangle
+struct Face
 {
     T v0, v1, v2; // 삼각형의 3개 꼭짓점
 
@@ -38,7 +38,7 @@ struct Triangle
 
 struct aabb_getter
 {
-    __device__ lbvh::aabb<float> operator()(const Triangle<float3> &tri) const noexcept
+    __device__ lbvh::aabb<float> operator()(const Face<float3> &tri) const noexcept
     {
         lbvh::aabb<float> box;
 

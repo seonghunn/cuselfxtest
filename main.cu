@@ -7,14 +7,14 @@
 #include <iostream>
 #include <time.h>
 
-#include "tri_tri_intersect.cuh"
+//#include "tri_tri_intersect.cuh"
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
-    //string INPUT_PATH = "/seoh_fast_cephfs/model/";
-    string INPUT_PATH = "";
+    string INPUT_PATH = "/seoh_fast_cephfs/model/";
+    //string INPUT_PATH = "";
     string input_filename(argv[1]);
     Eigen::MatrixXd V;
     Eigen::MatrixXi F;
@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 
     // Vertex and Faces
     Vertex<float>* V_array = new Vertex<float>[V.rows()];
-    Face<int>* F_array = new Face<int>[F.rows()];
+    Triangle<int>* F_array = new Triangle<int>[F.rows()];
 
     // Copy data Eigen to array
     for (int i = 0; i < V.rows(); ++i)
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
-    bool isIntersect = selfx::self_intersect(V_array, F_array, num_vertices, num_faces);
+    bool isIntersect = selfx::self_intersect(V_array, F_array, num_vertices, num_faces, 5e-2);
     // bool tri_intersect = lbvh::tri_tri_intersect(triangles);
 
     // 1 : self-intersect 0 : self-intersection free
