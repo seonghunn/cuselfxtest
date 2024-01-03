@@ -530,17 +530,17 @@ namespace selfx{
 
     //print where is intersection ------------
     // Remove if you don't need this
-    unsigned int h_pos;
-    cudaMemcpy(&h_pos, d_pos, sizeof(unsigned int), cudaMemcpyDeviceToHost);
-    printf("# of intersection : %d\n", h_pos);
-    unsigned int* h_intersections = new unsigned int[2 * maxIntersections];
-    cudaMemcpy(h_intersections, d_intersections, 2 * maxIntersections * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    // unsigned int h_pos;
+    // cudaMemcpy(&h_pos, d_pos, sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    // printf("# of intersection : %d\n", h_pos);
+    // unsigned int* h_intersections = new unsigned int[2 * maxIntersections];
+    // cudaMemcpy(h_intersections, d_intersections, 2 * maxIntersections * sizeof(unsigned int), cudaMemcpyDeviceToHost);
 
-    for (int i = 0; i < h_pos; i += 2) {    
-        printf("Intersection between triangle %d and triangle %d.\n", 
-        h_intersections[i], h_intersections[i + 1]);
-    }
-    delete [] h_intersections;
+    // for (int i = 0; i < h_pos; i += 2) {    
+    //     printf("Intersection between triangle %d and triangle %d.\n", 
+    //     h_intersections[i], h_intersections[i + 1]);
+    // }
+    // delete [] h_intersections;
     ////----------------------------
 
 
