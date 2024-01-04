@@ -9,7 +9,7 @@
 #include "include/utility.cuh"
 #include "include/tri_tri_intersect.cuh"
 #include "include/self_intersect.cuh"
-#include "include/types.h"
+#include "include/types.cuh"
 #include "include/adj_faces.cuh"
 #include "include/math.cuh"
 #endif// LBVH_SELFX_CUH

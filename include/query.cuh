@@ -1,6 +1,6 @@
 #ifndef LBVH_QUERY_CUH
 #define LBVH_QUERY_CUH
-#define STACK_SIZE 1024
+#define STACK_SIZE 256
 #include "predicator.cuh"
 
 namespace lbvh
@@ -208,6 +208,7 @@ namespace lbvh
                     {
                         //if (num_found < max_buffer_size)
                         //{
+                            *outiter++ = query_idx;
                             *outiter++ = obj_idx;
                         //}
                         ++num_found;
@@ -236,6 +237,7 @@ namespace lbvh
                     {
                         //if (num_found < max_buffer_size)
                         //{
+                            *outiter++ = query_idx;
                             *outiter++ = obj_idx;
                         //}
                         ++num_found;
