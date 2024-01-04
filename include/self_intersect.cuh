@@ -4,7 +4,7 @@
 #include <iostream>
 #include "bvh.cuh"
 #include "query.cuh"
-#include "types.h"
+#include "types.cuh"
 #include "tri_tri_intersect.cuh"
 #define BLOCK_SIZE 64
 
@@ -58,7 +58,7 @@ namespace selfx{
         unsigned int num_found = lbvh::get_number_of_intersect_candidates(bvh_dev, lbvh::overlaps(query_box), buffer, idx);
 
         // Copy results to the device vector
-        num_found_query_raw[idx] = num_found;
+        num_found_query_raw[idx] = 2 * num_found;
         //printf("%d\n", num_found_query_raw[idx]);
     }
 
@@ -110,6 +110,7 @@ namespace selfx{
         //printf("idx %d\n", idx);
         // Compute the query
         int first = first_query_result_raw[idx];
+        if(idx== num_faces-1) printf("first_query %d\n", first_query_result_raw[idx+1]);
         unsigned int num_found = lbvh::query_device(bvh_dev, lbvh::overlaps(query_box), buffer_results_query_raw, idx, first);
     }
 
@@ -187,7 +188,7 @@ namespace selfx{
     //const std::size_t N = triangles.size();
     thrust::device_vector<unsigned int> num_found_results_dev(num_faces);
     thrust::device_vector<unsigned int> buffer_results_dev(num_faces * BUFFER_SIZE, 0xFFFFFFFF);
-    thrust::device_vector<unsigned int> first_query_result(num_faces);
+    thrust::device_vector<unsigned int> first_query_result(num_faces + 1);
 
     unsigned int* num_found_results_raw = thrust::raw_pointer_cast(num_found_results_dev.data());
     unsigned int* buffer_results_raw = thrust::raw_pointer_cast(buffer_results_dev.data());
@@ -229,31 +230,41 @@ namespace selfx{
     unsigned int* d_isIntersect;        // device에서 사용할 포인터
     cudaMalloc((void**)&d_isIntersect, sizeof(unsigned int));
     cudaMemcpy(d_isIntersect, &h_isIntersect, sizeof(unsigned int), cudaMemcpyHostToDevice);
+    
+    unsigned int num_query_result = 0;
+    cudaMemcpy(&num_query_result, &first_query_result_raw[num_faces], sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    printf("num_query_result %d\n", num_query_result);
+    num_query_result /= 2;
+    printf("num_query_result %d\n", num_query_result);
+
+    unsigned int* buffer_result_host = new unsigned int[2 * num_query_result];
+    cudaMemcpy(buffer_result_host, buffer_results_raw, 2 * num_query_result * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    
+    for(unsigned int i = 0; i < num_query_result; i++){
+        printf("i : %d result %d %d\n", i, buffer_result_host[2 * i], buffer_result_host[2 * i + 1]);
+    }
+
 
     thrust::for_each(thrust::device,
                      thrust::make_counting_iterator<unsigned int>(0),
-                     thrust::make_counting_iterator<unsigned int>(num_faces),
+                     thrust::make_counting_iterator<unsigned int>(num_query_result-1),
                      [epsilon, d_isIntersect, d_pos, d_intersections, maxIntersections, first_query_result_raw, triangles_d_raw, num_found_results_raw, buffer_results_raw, F_d_raw] __device__(std::size_t idx) {
                          
-                        const unsigned int num_found = num_found_results_raw[idx];
+                        unsigned int query_idx = buffer_results_raw[2 * idx];
+                        unsigned int current_idx = buffer_results_raw[2 * idx + 1];
+                        const unsigned int num_found = num_found_results_raw[query_idx];
                         if(num_found == 0) return;
-                        unsigned int first = first_query_result_raw[idx];
-                        unsigned int last = first_query_result_raw[idx+1];
-                        // index 1 is triangle itself
 
-                        //if(idx != 1807182) return; crab_2m case 1
-                        //if(idx !=631899) return;
-                        // check each face and query list has same vertices, if they have at least 1 same vertex, they are adjacent faces
-                        for(unsigned int i = first; i < last; i++){
-                            unsigned int query_idx = buffer_results_raw[i];
+                            //unsigned int query_idx = buffer_results_raw[i];
                             //if(idx == 0) printf("query_idx %d\n",query_idx);
-                            if(query_idx == 0xFFFFFFFF) continue;
+                            if(query_idx == 0xFFFFFFFF) return;
+                            if(current_idx == 0xFFFFFFFF) return;
 
                             // Retrieve faces for idx and query_idx
-                            Triangle<int> current_face = F_d_raw[idx];
+                            Triangle<int> current_face = F_d_raw[current_idx];
                             Triangle<int> query_face = F_d_raw[query_idx];
 
-                            Face<float3> current_tris = triangles_d_raw[idx];
+                            Face<float3> current_tris = triangles_d_raw[current_idx];
                             Face<float3> query_tris = triangles_d_raw[query_idx];
 
 
@@ -328,8 +339,8 @@ namespace selfx{
                                         // check where is intersection -------------------
                                         int pos = atomicAdd(d_pos, 2);
                                         if (pos < 2 * maxIntersections - 2) {
-                                            d_intersections[pos] = idx;
-                                            d_intersections[pos + 1] = query_idx;
+                                            d_intersections[pos] = query_idx;
+                                            d_intersections[pos + 1] = current_idx;
                                         }
                                     }
                                     //buffer_results_raw[idx * BUFFER_SIZE + i] = 0xFFFFFFFF;
@@ -352,8 +363,8 @@ namespace selfx{
                                         // check where is intersection -------------------
                                         int pos = atomicAdd(d_pos, 2);
                                         if (pos < 2 * maxIntersections - 2) {
-                                            d_intersections[pos] = idx;
-                                            d_intersections[pos + 1] = query_idx;
+                                            d_intersections[pos] = query_idx;
+                                            d_intersections[pos + 1] = current_idx;
                                         }
                                     }
                                     //buffer_results_raw[idx * BUFFER_SIZE + i] = 0xFFFFFFFF;
@@ -375,8 +386,8 @@ namespace selfx{
                                         // check where is intersection -------------------
                                         int pos = atomicAdd(d_pos, 2);
                                         if (pos < 2 * maxIntersections - 2) {
-                                            d_intersections[pos] = idx;
-                                            d_intersections[pos + 1] = query_idx;
+                                            d_intersections[pos] = query_idx;
+                                            d_intersections[pos + 1] = current_idx;
                                         }
                                     }
                                     // remove faces from query test (already tested)
@@ -390,23 +401,30 @@ namespace selfx{
                                     // check where is intersection -------------------
                                     int pos = atomicAdd(d_pos, 2);
                                     if (pos < 2 * maxIntersections - 2) {
-                                        d_intersections[pos] = idx;
-                                        d_intersections[pos + 1] = query_idx;
+                                        d_intersections[pos] = query_idx;
+                                        d_intersections[pos + 1] = current_idx;
                                     }
                                     //buffer_results_raw[idx * BUFFER_SIZE + i] = 0xFFFFFFFF;
                                 }
-                                buffer_results_raw[i] = 0xFFFFFFFF;
+                                buffer_results_raw[2 * idx + 1] = 0xFFFFFFFF;
                             }
                             else{
                                 // no coplanar, share edge
                                 if(num_count == 2){
                                     //buffer_results_raw[idx * BUFFER_SIZE + i] = 0xFFFFFFFF;
-                                    buffer_results_raw[i] = 0xFFFFFFFF;
+                                    buffer_results_raw[2 * idx + 1] = 0xFFFFFFFF;
                                 }
                             }
-                        }
+                        
                         return;
                      });
+
+    //unsigned int* buffer_result_host = new unsigned int[2 * num_query_result];
+    cudaMemcpy(buffer_result_host, buffer_results_raw, 2 * num_query_result * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    
+    for(unsigned int i = 0; i < num_query_result; i++){
+        printf("i : %d result %d %d\n", i, buffer_result_host[2 * i], buffer_result_host[2 * i + 1]);
+    }                     
 
     cudaEventRecord(stop2);
     cudaEventSynchronize(stop2);
@@ -426,52 +444,44 @@ namespace selfx{
     
     thrust::for_each(thrust::device,
                     thrust::make_counting_iterator<std::size_t>(0),//0
-                    thrust::make_counting_iterator<std::size_t>(num_faces),//N
+                    thrust::make_counting_iterator<std::size_t>(num_query_result-1),//N
                     //[d_sources_targets, epsilon, d_pos, F_d_raw, buffer_results_raw, num_found_results_raw, triangles_d_raw, d_isIntersect, d_intersections, maxIntersections, d_invalid_indices, d_invalid_count] __device__(std::size_t idx) {
                     [epsilon, d_pos, F_d_raw, first_query_result_raw, buffer_results_raw, num_found_results_raw, triangles_d_raw, d_isIntersect, d_intersections, maxIntersections] __device__(std::size_t idx) {
                         // invalid triangle
-                        if(F_d_raw[idx].i == -1) {
+                        //if(idx != 7) return;
+                        unsigned int query_idx = buffer_results_raw[2 * idx];
+                        unsigned int current_idx = buffer_results_raw[2 * idx + 1];
+                        
+                        if(query_idx == 0xFFFFFFFF) return;
+                        if(current_idx == 0xFFFFFFFF) return;
+
+                        printf("query idx %u current idx %u\n", query_idx, current_idx);
+                        if(F_d_raw[query_idx].i == -1) {
                           //unsigned int pos = atomicAdd(d_invalid_count, 1);
                           //d_invalid_indices[pos] = idx;
                           return;
                         }
-                        //if(idx != 23) return;
+                        if(F_d_raw[current_idx].i == -1) return; // invalid triangle
 
                         bool coplanar;
-                        unsigned int num_found = num_found_results_raw[idx];
-                        unsigned int first = first_query_result_raw[idx];
-                        unsigned int last = first_query_result_raw[idx+1];
+                        //unsigned int num_found = num_found_results_raw[query_idx];
                         float3 source, target;
 
                         source = make_float3(1,1,1);
                         target = make_float3(-1,-1,-1);
-                        float3 p1_ = triangles_d_raw[idx].v0;
-                        float3 q1_ = triangles_d_raw[idx].v1;
-                        float3 r1_ = triangles_d_raw[idx].v2;
 
-                        float distP1 = norm3df(p1_.x, p1_.y, p1_.z);
-                        float distQ1 = norm3df(q1_.x, q1_.y, q1_.z);
-                        float distR1 = norm3df(r1_.x, r1_.y, r1_.z);
+                        float3 p1 = triangles_d_raw[query_idx].v0;
+                        float3 q1 = triangles_d_raw[query_idx].v1;
+                        float3 r1 = triangles_d_raw[query_idx].v2;
 
-                        int vert1_i = F_d_raw[idx].i;
-                        int vert1_j = F_d_raw[idx].j;
-                        int vert1_k = F_d_raw[idx].k;
-                        //printf("first %d , last %d\n", first, last);
+                        float distP1 = norm3df(p1.x, p1.y, p1.z);
+                        float distQ1 = norm3df(q1.x, q1.y, q1.z);
+                        float distR1 = norm3df(r1.x, r1.y, r1.z);
 
-                        for(unsigned int i = first; i < last; i++){
-                            unsigned int idx_buffer = buffer_results_raw[i];
-                            //printf("idx_buffer %d\n", idx_buffer);
-                            if(idx_buffer == 0xFFFFFFFF) continue;
-                            if(F_d_raw[idx_buffer].i == -1) continue; // invalid triangle
-
-                            int vert2_i = F_d_raw[idx_buffer].i;
-                            int vert2_j = F_d_raw[idx_buffer].j;
-                            int vert2_k = F_d_raw[idx_buffer].k;
                             
-                            float3 p1,q1,r1;
-                            float3 p2 = triangles_d_raw[idx_buffer].v0;
-                            float3 q2 = triangles_d_raw[idx_buffer].v1;
-                            float3 r2 = triangles_d_raw[idx_buffer].v2;
+                            float3 p2 = triangles_d_raw[current_idx].v0;
+                            float3 q2 = triangles_d_raw[current_idx].v1;
+                            float3 r2 = triangles_d_raw[current_idx].v2;
 
                             float distP2 = norm3df(p2.x, p2.y, p2.z);
                             float distQ2 = norm3df(q2.x, q2.y, q2.z);
@@ -482,14 +492,21 @@ namespace selfx{
                             float avgDist = (distP1 + distQ1 + distR1 + distP2 + distQ2 + distR2) / (10.0f * 6.0f);
 
                             // scale
-                            p1.x = p1_.x / avgDist; p1.y = p1_.y / avgDist; p1.z = p1_.z / avgDist;
-                            q1.x = q1_.x / avgDist; q1.y = q1_.y / avgDist; q1.z = q1_.z / avgDist;
-                            r1.x = r1_.x / avgDist; r1.y = r1_.y / avgDist; r1.z = r1_.z / avgDist;
+                            p1.x /= avgDist; p1.y /= avgDist; p1.z /= avgDist;
+                            q1.x /= avgDist; q1.y /= avgDist; q1.z /= avgDist;
+                            r1.x /= avgDist; r1.y /= avgDist; r1.z /= avgDist;
 
                             p2.x /= avgDist; p2.y /= avgDist; p2.z /= avgDist;
                             q2.x /= avgDist; q2.y /= avgDist; q2.z /= avgDist;
                             r2.x /= avgDist; r2.y /= avgDist; r2.z /= avgDist;
 
+                            // printf("p1: %f, %f, %f\n", p1.x, p1.y, p1.z);
+                            // printf("q1: %f, %f, %f\n", q1.x, q1.y, q1.z);
+                            // printf("r1: %f, %f, %f\n", r1.x, r1.y, r1.z);
+
+                            // printf("p2: %f, %f, %f\n", p2.x, p2.y, p2.z);
+                            // printf("q2: %f, %f, %f\n", q2.x, q2.y, q2.z);
+                            // printf("r2: %f, %f, %f\n", r2.x, r2.y, r2.z);
 
 
                             bool isIntersecting = tri_tri_intersection_test_3d(p1, q1, r1, p2, q2, r2, coplanar, source, target);
@@ -498,7 +515,7 @@ namespace selfx{
                             float dist = largest_distance(source, target);
                             bool sharedVertex = check_if_shared_vertex(p1,q1,r1,p2,q2,r2);
                             if(dist < epsilon && sharedVertex){
-                                continue; // not self intersect
+                                return; // not self intersect
                             }
                             else{
                                 if(isIntersecting) {
@@ -507,12 +524,11 @@ namespace selfx{
                                     //printf("source x %f, y %f, z %f target x %f, y %f, z %f\n",source.x, source.y, source.z, target.x, target.y, target.z);
                                     int pos = atomicAdd(d_pos, 2);
                                     if (pos < 2 * maxIntersections - 2) {
-                                        d_intersections[pos] = idx;
-                                        d_intersections[pos + 1] = idx_buffer;
+                                        d_intersections[pos] = query_idx;
+                                        d_intersections[pos + 1] = current_idx;
                                     }
                                 }
                             }
-                          }
                         return;
                     });
     cudaDeviceSynchronize();
@@ -529,10 +545,10 @@ namespace selfx{
     cudaEventSynchronize(stop);
 
     //print where is intersection ------------
+    // Remove if you don't need this
     unsigned int h_pos;
     cudaMemcpy(&h_pos, d_pos, sizeof(unsigned int), cudaMemcpyDeviceToHost);
     printf("# of intersection : %d\n", h_pos);
-//    /////------------
     unsigned int* h_intersections = new unsigned int[2 * maxIntersections];
     cudaMemcpy(h_intersections, d_intersections, 2 * maxIntersections * sizeof(unsigned int), cudaMemcpyDeviceToHost);
 
@@ -541,7 +557,7 @@ namespace selfx{
         h_intersections[i], h_intersections[i + 1]);
     }
     delete [] h_intersections;
-    ////--------------
+    ////----------------------------
 
 
 

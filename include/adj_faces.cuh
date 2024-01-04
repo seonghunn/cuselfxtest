@@ -3,7 +3,7 @@
 
 #include <thrust/for_each.h>
 #include <vector>
-#include "types.h"
+#include "types.cuh"
 #include <thrust/device_vector.h>
 
 //TODO: init adj faces

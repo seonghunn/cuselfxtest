@@ -208,6 +208,7 @@ namespace lbvh
                     {
                         //if (num_found < max_buffer_size)
                         //{
+                            *outiter++ = query_idx;
                             *outiter++ = obj_idx;
                         //}
                         ++num_found;
@@ -236,6 +237,7 @@ namespace lbvh
                     {
                         //if (num_found < max_buffer_size)
                         //{
+                            *outiter++ = query_idx;
                             *outiter++ = obj_idx;
                         //}
                         ++num_found;
