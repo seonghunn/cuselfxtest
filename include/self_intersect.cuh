@@ -110,7 +110,7 @@ namespace selfx{
         //printf("idx %d\n", idx);
         // Compute the query
         int first = first_query_result_raw[idx];
-        if(idx== num_faces-1) printf("first_query %d\n", first_query_result_raw[idx+1]);
+        //if(idx== num_faces-1) printf("first_query %d\n", first_query_result_raw[idx+1]);
         unsigned int num_found = lbvh::query_device(bvh_dev, lbvh::overlaps(query_box), buffer_results_query_raw, idx, first);
     }
 
