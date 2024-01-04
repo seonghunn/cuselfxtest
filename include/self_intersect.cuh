@@ -245,7 +245,7 @@ namespace selfx{
 
     thrust::for_each(thrust::device,
                      thrust::make_counting_iterator<unsigned int>(0),
-                     thrust::make_counting_iterator<unsigned int>(num_query_result-1),
+                     thrust::make_counting_iterator<unsigned int>(num_query_result),
                      [epsilon, d_isIntersect, d_pos, d_intersections, maxIntersections, first_query_result_raw, triangles_d_raw, num_found_results_raw, buffer_results_raw, F_d_raw] __device__(std::size_t idx) {
                          
                         unsigned int query_idx = buffer_results_raw[2 * idx];
@@ -439,7 +439,7 @@ namespace selfx{
     
     thrust::for_each(thrust::device,
                     thrust::make_counting_iterator<std::size_t>(0),//0
-                    thrust::make_counting_iterator<std::size_t>(num_query_result-1),//N
+                    thrust::make_counting_iterator<std::size_t>(num_query_result),//N
                     //[d_sources_targets, epsilon, d_pos, F_d_raw, buffer_results_raw, num_found_results_raw, triangles_d_raw, d_isIntersect, d_intersections, maxIntersections, d_invalid_indices, d_invalid_count] __device__(std::size_t idx) {
                     [epsilon, d_pos, F_d_raw, first_query_result_raw, buffer_results_raw, num_found_results_raw, triangles_d_raw, d_isIntersect, d_intersections, maxIntersections] __device__(std::size_t idx) {
                         // invalid triangle
