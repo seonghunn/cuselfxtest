@@ -233,9 +233,8 @@ namespace selfx{
     
     unsigned int num_query_result = 0;
     cudaMemcpy(&num_query_result, &first_query_result_raw[num_faces], sizeof(unsigned int), cudaMemcpyDeviceToHost);
-    printf("num_query_result %d\n", num_query_result);
     num_query_result /= 2;
-    printf("num_query_result %d\n", num_query_result);
+    //printf("num_query_result %d\n", num_query_result);
 
     // unsigned int* buffer_result_host = new unsigned int[2 * num_query_result];
     // cudaMemcpy(buffer_result_host, buffer_results_raw, 2 * num_query_result * sizeof(unsigned int), cudaMemcpyDeviceToHost);

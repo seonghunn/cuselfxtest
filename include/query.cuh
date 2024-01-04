@@ -1,6 +1,6 @@
 #ifndef LBVH_QUERY_CUH
 #define LBVH_QUERY_CUH
-#define STACK_SIZE 1024
+#define STACK_SIZE 256
 #include "predicator.cuh"
 
 namespace lbvh
