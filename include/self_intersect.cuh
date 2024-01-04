@@ -237,12 +237,12 @@ namespace selfx{
     num_query_result /= 2;
     printf("num_query_result %d\n", num_query_result);
 
-    unsigned int* buffer_result_host = new unsigned int[2 * num_query_result];
-    cudaMemcpy(buffer_result_host, buffer_results_raw, 2 * num_query_result * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    // unsigned int* buffer_result_host = new unsigned int[2 * num_query_result];
+    // cudaMemcpy(buffer_result_host, buffer_results_raw, 2 * num_query_result * sizeof(unsigned int), cudaMemcpyDeviceToHost);
     
-    for(unsigned int i = 0; i < num_query_result; i++){
-        printf("i : %d result %d %d\n", i, buffer_result_host[2 * i], buffer_result_host[2 * i + 1]);
-    }
+    // for(unsigned int i = 0; i < num_query_result; i++){
+    //     printf("i : %d result %d %d\n", i, buffer_result_host[2 * i], buffer_result_host[2 * i + 1]);
+    // }
 
 
     thrust::for_each(thrust::device,
@@ -419,12 +419,12 @@ namespace selfx{
                         return;
                      });
 
-    //unsigned int* buffer_result_host = new unsigned int[2 * num_query_result];
-    cudaMemcpy(buffer_result_host, buffer_results_raw, 2 * num_query_result * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+
+    // cudaMemcpy(buffer_result_host, buffer_results_raw, 2 * num_query_result * sizeof(unsigned int), cudaMemcpyDeviceToHost);
     
-    for(unsigned int i = 0; i < num_query_result; i++){
-        printf("i : %d result %d %d\n", i, buffer_result_host[2 * i], buffer_result_host[2 * i + 1]);
-    }                     
+    // for(unsigned int i = 0; i < num_query_result; i++){
+    //     printf("i : %d result %d %d\n", i, buffer_result_host[2 * i], buffer_result_host[2 * i + 1]);
+    // }                     
 
     cudaEventRecord(stop2);
     cudaEventSynchronize(stop2);
@@ -455,7 +455,7 @@ namespace selfx{
                         if(query_idx == 0xFFFFFFFF) return;
                         if(current_idx == 0xFFFFFFFF) return;
 
-                        printf("query idx %u current idx %u\n", query_idx, current_idx);
+                        //printf("query idx %u current idx %u\n", query_idx, current_idx);
                         if(F_d_raw[query_idx].i == -1) {
                           //unsigned int pos = atomicAdd(d_invalid_count, 1);
                           //d_invalid_indices[pos] = idx;
