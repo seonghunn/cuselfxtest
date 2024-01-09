@@ -1249,7 +1249,8 @@ __device__ float angle_between_vectors_2d(float2 a, float2 b) {
 
 __device__ bool angle_range_overlap(float angle_std, float angle1, float angle2, float epsilon)
 {
-    epsilon = 1e-6;
+    //epsilon = 1e-6;
+    epsilon = 0;
     float lower_bound, upper_bound;
     bool is_angle_in_range = false;
     // Check if either angle1 or angle2 is within the range defined by angle_std
