@@ -460,9 +460,9 @@ namespace selfx{
                     thrust::make_counting_iterator<std::size_t>(0),//0
                     thrust::make_counting_iterator<std::size_t>(num_query_result),//N
                     //[d_sources_targets, epsilon, d_pos, F_d_raw, buffer_results_raw, num_found_results_raw, triangles_d_raw, d_isIntersect, d_intersections, maxIntersections, d_invalid_indices, d_invalid_count] __device__(std::size_t idx) {
-                    [epsilon, d_pos, F_d_raw, first_query_result_raw, buffer_results_raw, num_found_results_raw, triangles_d_raw, d_isIntersect, d_intersections, maxIntersections] __device__(std::size_t idx) {
+                    [epsilon, d_pos, F_d_raw, first_query_result_raw, buffer_results_raw, num_found_results_raw, triangles_d_raw, d_isIntersect, d_intersections, maxIntersections, num_faces] __device__(std::size_t idx) {
                         // invalid triangle
-                        //if(idx != 7) return;
+                        //if(idx != 1) return;
                         unsigned int query_idx = buffer_results_raw[2 * idx];
                         unsigned int current_idx = buffer_results_raw[2 * idx + 1];
                         
@@ -471,11 +471,13 @@ namespace selfx{
 
                         //printf("query idx %u current idx %u\n", query_idx, current_idx);
                         if(F_d_raw[query_idx].i == -1) {
+                        //if(F_d_raw[query_idx].i == -1) {
                           //unsigned int pos = atomicAdd(d_invalid_count, 1);
                           //d_invalid_indices[pos] = idx;
                           return;
                         }
                         if(F_d_raw[current_idx].i == -1) return; // invalid triangle
+
 
                         bool coplanar;
                         //unsigned int num_found = num_found_results_raw[query_idx];
@@ -527,6 +529,7 @@ namespace selfx{
                             float r_i1[3];
                             float r_i2[3];
                             bool isIntersecting = isect_tri_tri_v3(p1,q1,r1,p2,q2,r2,r_i1,r_i2);
+                            //printf("isIntersecting %d epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n",isIntersecting,epsilon, r_i1[0], r_i1[1], r_i1[2],r_i2[0],r_i2[1] ,r_i2[2], p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);                                        
                             // printf("idx %d source x %f y %f z %f\n",idx, source.x, source.y, source.z);
                             // printf("idx %d target x %f y %f z %f\n",idx, target.x, target.y, target.z);
                             copy_v3_v3_float3_float(source, r_i1);
@@ -535,6 +538,7 @@ namespace selfx{
                             //bool sharedVertex = check_if_shared_vertex(p1,q1,r1,p2,q2,r2);
                             bool sharedVertex = check_if_shared_vertex(F_d_raw[query_idx].i, F_d_raw[query_idx].j, F_d_raw[query_idx].k,
                                         F_d_raw[current_idx].i, F_d_raw[current_idx].j, F_d_raw[current_idx].k);
+                            //printf("intersecting %d shared vertex %d\ndist %.30f, epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n",isIntersecting, sharedVertex, dist, epsilon, source.x, source.y, source.z, target.x, target.y, target.z, p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);                                        
                             if(dist < epsilon && sharedVertex){
                                 return; // not self intersect
                             }
@@ -542,7 +546,7 @@ namespace selfx{
                                 if(isIntersecting) {
                                     atomicExch(d_isIntersect, 1);
                                     // check where is intersection -------------------
-                                    printf("dist %.30f, epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", dist, epsilon, source.x, source.y, source.z, target.x, target.y, target.z, p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);
+                                    printf("intersect dist %.30f, epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", dist, epsilon, source.x, source.y, source.z, target.x, target.y, target.z, p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);
                                     // printf("idx %d dist %f\n"\
                                     //     "p1 << %f, %f, %f;\n"\
                                     //     "q1 << %f, %f, %f;\n"\

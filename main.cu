@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
-    bool isIntersect = selfx::self_intersect(V_array, F_array, num_vertices, num_faces, 5e-2);
+    bool isIntersect = selfx::self_intersect(V_array, F_array, num_vertices, num_faces, 5e-3);
     // bool tri_intersect = lbvh::tri_tri_intersect(triangles);
 
     // 1 : self-intersect 0 : self-intersection free

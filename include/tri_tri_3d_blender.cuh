@@ -87,7 +87,7 @@ bool is_coplanar_blender(const float tri_a[3][3],
   // }
   if (!side[1][0] && !side[1][1] && !side[1][2]) {
     /* Coplanar case is not supported. */
-    printf("side1 %f side2 %f side3 %f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", side[1][0], side[1][1], side[1][2], tri_a[0][0], tri_a[0][1], tri_a[0][2], tri_a[1][0], tri_a[1][1], tri_a[1][2], tri_a[2][0], tri_a[2][1], tri_a[2][2], tri_b[0][0], tri_b[0][1], tri_b[0][2], tri_b[1][0], tri_b[1][1], tri_b[1][2], tri_b[2][0], tri_b[2][1], tri_b[2][2]);
+    //printf("side1 %f side2 %f side3 %f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", side[1][0], side[1][1], side[1][2], tri_a[0][0], tri_a[0][1], tri_a[0][2], tri_a[1][0], tri_a[1][1], tri_a[1][2], tri_a[2][0], tri_a[2][1], tri_a[2][2], tri_b[0][0], tri_b[0][1], tri_b[0][2], tri_b[1][0], tri_b[1][1], tri_b[1][2], tri_b[2][0], tri_b[2][1], tri_b[2][2]);
     return true;
   }
   return false;
@@ -145,6 +145,7 @@ bool isect_tri_tri_v3_ex(const float tri_a[3][3],
   {
     /* All vertices of the 1st triangle are positioned on the same side to the
      * plane defined by the 2nd triangle. */
+    //printf("on the same side\n");
     return false;
   }
 
@@ -156,40 +157,62 @@ bool isect_tri_tri_v3_ex(const float tri_a[3][3],
     /* Rearrange the triangle so that the vertex that is alone on one side
      * of the plane is located at index 1. */
     int tri_i[3];
+    //printf("side[%d] %f %f %f\n", i, side[i][0], side[i][1], side[i][2]);
     if ((side[i][0] && side[i][1]) && (side[i][0] < 0.0f) == (side[i][1] < 0.0f)) {
       tri_i[0] = 1;
       tri_i[1] = 2;
       tri_i[2] = 0;
+      //printf("for i : %d case 1\n", i);
     }
     else if ((side[i][1] && side[i][2]) && (side[i][1] < 0.0f) == (side[i][2] < 0.0f)) {
       tri_i[0] = 2;
       tri_i[1] = 0;
       tri_i[2] = 1;
+      //printf("for i : %d case 2\n", i);
+    }
+    // side 1 is zero, 0, 2 is nonzero ------------- cannot divide into 2 and 1, pick anything which is nonzero
+    else if (!side[i][1] && (side[i][2] < 0.0f) != (side[i][0] < 0.0f)){
+      tri_i[0] = 1;
+      tri_i[1] = 2;
+      tri_i[2] = 0;
+      //printf("for i : %d case add\n", i);
     }
     else {
       tri_i[0] = 0;
       tri_i[1] = 1;
       tri_i[2] = 2;
+      //printf("for i : %d case 3\n", i);
     }
+    // if(i == 0){
+    //   tri_i[0] = 2;
+    //   tri_i[1] = 0;
+    //   tri_i[2] = 1;
+    // }
 
     double dot_b = dot_v3db_v3fl(isect_dir, tri[tri_i[1]]);
     float sidec = side[i][tri_i[1]];
+    //printf("i : %d sidec %f\n", i, sidec);
     if (sidec) {
       double dot_a = dot_v3db_v3fl(isect_dir, tri[tri_i[0]]);
       double dot_c = dot_v3db_v3fl(isect_dir, tri[tri_i[2]]);
       float fac0 = sidec / (sidec - side[i][tri_i[0]]);
       float fac1 = sidec / (sidec - side[i][tri_i[2]]);
+      //printf("fac0 %f\n", fac0);
+      //printf("fac1 %f\n", fac1);
       double offset0 = fac0 * (dot_a - dot_b);
       double offset1 = fac1 * (dot_c - dot_b);
+      //printf("offset0 %.15f\n", offset0);
+      //printf("offset1 %.15f\n", offset1);
       if (offset0 > offset1) {
         /* Sort min max. */
         SWAP(double, offset0, offset1);
         SWAP(float, fac0, fac1);
         SWAP(int, tri_i[0], tri_i[2]);
       }
-
+      //printf("dot_b %f\n",dot_b);
       range[i].min = (float)(dot_b + offset0);
       range[i].max = (float)(dot_b + offset1);
+      //printf("before interp range %i min max %f %f\n", i, range[i].min, range[i].max);
       interp_v3_v3v3(range[i].loc[0], tri[tri_i[1]], tri[tri_i[0]], fac0);
       interp_v3_v3v3(range[i].loc[1], tri[tri_i[1]], tri[tri_i[2]], fac1);
     }
@@ -199,8 +222,11 @@ bool isect_tri_tri_v3_ex(const float tri_a[3][3],
       copy_v3_v3(range[i].loc[1], tri[tri_i[1]]);
     }
   }
+  //printf("range 0 max min %f %f range 1 max min %f %f\n", range[0].max, range[0].min, range[1].max, range[1].min);
 
-  if ((range[0].max > range[1].min) && (range[0].min < range[1].max)) {
+  // copy_v3_v3(r_i1, range[1].loc[0]);
+  // copy_v3_v3(r_i2, range[1].loc[1]);
+  if ((range[0].max >= range[1].min) && (range[0].min <= range[1].max)) {
     /* The triangles intersect because they overlap on the intersection line.
      * Now identify the two points of intersection that are in the middle to get the actual
      * intersection between the triangles. (B--C from A--B--C--D) */
