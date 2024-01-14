@@ -147,11 +147,17 @@ __device__ __host__ float distance(const float3 &a, const float3 &b){
 
 
 // return : if two faces share at least one vertex
+// __device__ __host__
+// inline bool check_if_shared_vertex(const float3 &p1, const float3 &q1, const float3 &r1,
+//                    const float3 &p2, const float3 &q2, const float3 &r2){
+//     return (p1 == p2) || (p1 == q2) || (p1 == r2) || (q1 == p2) || (q1 == q2) || (q1 == r2)
+//             || (r1 == p2) || (r1 == q2) || (r1 == r2);
+// }
+
 __device__ __host__
-inline bool check_if_shared_vertex(const float3 &p1, const float3 &q1, const float3 &r1,
-                   const float3 &p2, const float3 &q2, const float3 &r2){
-    return (p1 == p2) || (p1 == q2) || (p1 == r2) || (q1 == p2) || (q1 == q2) || (q1 == r2)
-            || (r1 == p2) || (r1 == q2) || (r1 == r2);
+inline bool check_if_shared_vertex(unsigned int vert1_i, unsigned int vert1_j, unsigned int vert1_k, unsigned int vert2_i, unsigned int vert2_j, unsigned int vert2_k){
+  return (vert1_i == vert2_i) || (vert1_i == vert2_j) || (vert1_i == vert2_k) || (vert1_j == vert2_i) || (vert1_j == vert2_j)
+  || (vert1_j == vert2_k) || (vert1_k == vert2_i) || (vert1_k == vert2_j) || (vert1_k == vert2_k);
 }
 
 __device__ __host__
@@ -592,7 +598,91 @@ bool CONSTRUCT_INTERSECTION(
   }
     }
   }
+// custom
+__device__ __host__ bool is_coplanar(
+    const float3 & p1, const float3 & q1, const float3 & r1, 
+    const float3 & p2, const float3 & q2, const float3 & r2, float eps) {
+  //using Scalar = typename DerivedP1::Scalar;
+  //using RowVector3D = typename Eigen::Matrix<Scalar, 1, 3>;
 
+  float dp1, dq1, dr1, dp2, dq2, dr2;
+  float3 v1, v2;//, v;
+  float3 N1, N2;//, N;
+
+  // source = make_float3(1,1,1);
+  // target = make_float3(-1,-1,-1);
+  //float alpha;
+  // Compute distance signs  of p1, q1 and r1 
+  // to the plane of triangle(p2,q2,r2)
+
+  v1=p2-r2;
+  v2=q2-r2;
+  N2=cross(v1,v2);
+
+
+  v1=p1-r2;
+  //dp1 = v1.dot(N2);
+  dp1 = dot(v1, N2);
+  v1=q1-r2;
+  //dq1 = v1.dot(N2);
+  dq1 = dot(v1, N2);
+  v1=r1-r2;
+  //dr1 = v1.dot(N2);
+  dr1 = dot(v1, N2);
+
+  if (((dp1 * dq1) > 0.0) && ((dp1 * dr1) > 0.0))  return false; 
+
+  // Compute distance signs  of p2, q2 and r2 
+  // to the plane of triangle(p1,q1,r1)
+
+  
+  v1=q1-p1;
+  v2=r1-p1;
+  //N1=v1.cross(v2);
+  N1 = cross(v1, v2);
+
+  v1=p2-r1;
+  //dp2 = v1.dot(N1);
+  dp2 = dot(v1, N1);
+  v1=q2-r1;
+  //dq2 = v1.dot(N1);
+  dq2 = dot(v1, N1);
+  v1=r2-r1;
+  //dr2 = v1.dot(N1);
+  dr2 = dot(v1, N1);
+  
+  if (((dp2 * dq2) > 0.0) && ((dp2 * dr2) > 0.0)) return false;
+
+  // Permutation in a canonical form of T1's vertices
+  if (dp1 > 0.0) {
+    if (dq1 > 0.0) return false;
+    else if (dr1 > 0.0) return false;
+  
+    else return false;
+  } else if (dp1 < 0.0) {
+    if (dq1 < 0.0) return false;
+    else if (dr1 < 0.0) return false;
+    else return false;
+  } else {
+    if (dq1 < 0.0) {
+      if (dr1 >= 0.0) return false;
+      else return false;
+    }
+    else if (dq1 > 0.0) {
+      if (dr1 > 0.0) return false;
+      else return false;
+    }
+    else  {
+      if (dr1 > 0.0) return false;
+      else if (dr1 < 0.0) return false;
+      else {
+        // triangles are co-planar
+        return true;
+        //return coplanar_tri_tri3d(p1,q1,r1,p2,q2,r2,N1);
+      }
+    }
+  }
+}
 
 __device__ __host__
 bool tri_tri_intersection_test_3d(
@@ -801,43 +891,43 @@ bool tri_tri_intersection_test_3d(
 //       return true;
 //     }
 
-// custom
-__device__ __host__ bool is_coplanar(
-    const float3 & p1, const float3 & q1, const float3 & r1, 
-    const float3 & p2, const float3 & q2, const float3 & r2, float eps) {
-    eps = 1e-6;
-    // 삼각형 1과 2의 법선 계산
-    float3 v1 = p2 - r2;
-    float3 v2 = q2 - r2;
-    float3 N2 = cross(v1, v2); // 삼각형 2의 법선
+// // custom
+// __device__ __host__ bool is_coplanar(
+//     const float3 & p1, const float3 & q1, const float3 & r1, 
+//     const float3 & p2, const float3 & q2, const float3 & r2, float eps) {
+//     eps = 1e-6;
+//     // 삼각형 1과 2의 법선 계산
+//     float3 v1 = p2 - r2;
+//     float3 v2 = q2 - r2;
+//     float3 N2 = cross(v1, v2); // 삼각형 2의 법선
 
-    v1 = q1 - p1;
-    v2 = r1 - p1;
-    float3 N1 = cross(v1, v2); // 삼각형 1의 법선
+//     v1 = q1 - p1;
+//     v2 = r1 - p1;
+//     float3 N1 = cross(v1, v2); // 삼각형 1의 법선
 
-    // 법선 간의 각도 계산
-    float normN1 = sqrt(dot(N1, N1));
-    float normN2 = sqrt(dot(N2, N2));
-    float dotN1N2 = dot(N1, N2);
-    float angle = acosf(dotN1N2 / (normN1 * normN2));
+//     // 법선 간의 각도 계산
+//     float normN1 = sqrt(dot(N1, N1));
+//     float normN2 = sqrt(dot(N2, N2));
+//     float dotN1N2 = dot(N1, N2);
+//     float angle = acosf(dotN1N2 / (normN1 * normN2));
 
-    // 삼각형 1의 꼭짓점이 삼각형 2의 평면과의 거리
-    float dp1 = dot(p1 - r2, N2);
-    float dq1 = dot(q1 - r2, N2);
-    float dr1 = dot(r1 - r2, N2);
+//     // 삼각형 1의 꼭짓점이 삼각형 2의 평면과의 거리
+//     float dp1 = dot(p1 - r2, N2);
+//     float dq1 = dot(q1 - r2, N2);
+//     float dr1 = dot(r1 - r2, N2);
 
-    // 삼각형 2의 꼭짓점이 삼각형 1의 평면과의 거리
-    float dp2 = dot(p2 - p1, N1);
-    float dq2 = dot(q2 - p1, N1);
-    float dr2 = dot(r2 - p1, N1);
+//     // 삼각형 2의 꼭짓점이 삼각형 1의 평면과의 거리
+//     float dp2 = dot(p2 - p1, N1);
+//     float dq2 = dot(q2 - p1, N1);
+//     float dr2 = dot(r2 - p1, N1);
 
-    //printf("dp1 %f dq1 %f dr1 %f dp2 %f dq2 %f dr2 %f angle %f\n", dp1, dq1, dr1, dp2, dq2, dr2, angle);
+//     //printf("dp1 %f dq1 %f dr1 %f dp2 %f dq2 %f dr2 %f angle %f\n", dp1, dq1, dr1, dp2, dq2, dr2, angle);
 
-    // 모든 꼭짓점이 다른 삼각형의 평면에 충분히 가까운지와 법선 각도가 충분히 작은지 확인
-    return fabs(dp1) <= eps && fabs(dq1) <= eps && fabs(dr1) <= eps &&
-           fabs(dp2) <= eps && fabs(dq2) <= eps && fabs(dr2) <= eps &&
-           angle <= eps;
-}
+//     // 모든 꼭짓점이 다른 삼각형의 평면에 충분히 가까운지와 법선 각도가 충분히 작은지 확인
+//     return fabs(dp1) <= eps && fabs(dq1) <= eps && fabs(dr1) <= eps &&
+//            fabs(dp2) <= eps && fabs(dq2) <= eps && fabs(dr2) <= eps &&
+//            angle <= eps;
+// }
 
 __device__ __host__
 bool tri_tri_overlap_test_coplanar(
@@ -882,30 +972,101 @@ __device__ bool check_shared_edge_and_side_2d(
 {
     epsilon = 1e-6;
     // Check for shared edge between the triangles
+    // 삼각형 1의 꼭짓점: p1, q1, r1
+    // 삼각형 2의 꼭짓점: p2, q2, r2
+    
     if (are_points_same_2d(p1, p2, epsilon) && are_points_same_2d(q1, q2, epsilon)) {
-        // Shared edge found between p1-q1 and p2-q2
+        // shared edge p1-q1, p2-q2
         return is_on_same_side_2d(r1, r2, p1, q1);
     }
+
     if (are_points_same_2d(p1, q2, epsilon) && are_points_same_2d(q1, p2, epsilon)) {
-        // Shared edge found between p1-q1 and q2-p2
+        // shared edge p1-q1, p2-q2
         return is_on_same_side_2d(r1, r2, p1, q1);
     }
+    
+    if (are_points_same_2d(p1, p2, epsilon) && are_points_same_2d(q1, r2, epsilon)) {
+        // shared edge p1-q1, p2-r2
+        return is_on_same_side_2d(q2, r1, p1, q1);
+    }
+
+    if (are_points_same_2d(p1, r2, epsilon) && are_points_same_2d(q1, p2, epsilon)) {
+        // shared edge p1-q1, p2-r2
+        return is_on_same_side_2d(q2, r1, p1, q1);
+    }
+    
+    if (are_points_same_2d(p1, p2, epsilon) && are_points_same_2d(r1, q2, epsilon)) {
+        // shared edge p1-r1, p2-q2
+        return is_on_same_side_2d(q1, r2, p1, r1);
+    }
+
+    if (are_points_same_2d(p1, q2, epsilon) && are_points_same_2d(r1, p2, epsilon)) {
+        // shared edge p1-r1, p2-q2
+        return is_on_same_side_2d(q1, r2, p1, r1);
+    }
+    
     if (are_points_same_2d(p1, p2, epsilon) && are_points_same_2d(r1, r2, epsilon)) {
-        // Shared edge found between p1-r1 and p2-r2
+        // shared edge p1-r1, p2-r2
         return is_on_same_side_2d(q1, q2, p1, r1);
     }
+
     if (are_points_same_2d(p1, r2, epsilon) && are_points_same_2d(r1, p2, epsilon)) {
-        // Shared edge found between p1-r1 and r2-p2
+        // shared edge p1-r1, p2-r2
         return is_on_same_side_2d(q1, q2, p1, r1);
     }
-    if (are_points_same_2d(q1, q2, epsilon) && are_points_same_2d(r1, r2, epsilon)) {
-        // Shared edge found between q1-r1 and q2-r2
-        return is_on_same_side_2d(p1, p2, q1, r1);
+    
+    if (are_points_same_2d(q1, p2, epsilon) && are_points_same_2d(r1, q2, epsilon)) {
+        // shared edge q1-r1, p2-q2
+        return is_on_same_side_2d(p1, r2, q1, r1);
     }
-    if (are_points_same_2d(q1, r2, epsilon) && are_points_same_2d(r1, q2, epsilon)) {
-        // Shared edge found between q1-r1 and r2-q2
-        return is_on_same_side_2d(p1, p2, q1, r1);
+
+    if (are_points_same_2d(q1, q2, epsilon) && are_points_same_2d(r1, p2, epsilon)) {
+        // shared edge q1-r1, p2-q2
+        return is_on_same_side_2d(p1, r2, q1, r1);
     }
+    
+    if (are_points_same_2d(q1, p2, epsilon) && are_points_same_2d(r1, r2, epsilon)) {
+        // shared edge q1-r1, p2-r2
+        return is_on_same_side_2d(p1, q2, q1, r1);
+    }
+
+    if (are_points_same_2d(q1, r2, epsilon) && are_points_same_2d(r1, p2, epsilon)) {
+        // shared edge q1-r1, p2-r2
+        return is_on_same_side_2d(p1, q2, q1, r1);
+    }
+    
+    if (are_points_same_2d(r1, p2, epsilon) && are_points_same_2d(q1, r2, epsilon)) {
+        // shared edge r1-q1, p2-r2
+        return is_on_same_side_2d(p1, q2, r1, q1);
+    }
+
+    if (are_points_same_2d(r1, r2, epsilon) && are_points_same_2d(q1, p2, epsilon)) {
+        // shared edge r1-q1, p2-r2
+        return is_on_same_side_2d(p1, q2, r1, q1);
+    }
+
+    if (are_points_same_2d(p1, q2, epsilon) && are_points_same_2d(q1, r2, epsilon)){
+        // shared edge p1-q1, q2-r2
+        return is_on_same_side_2d(p2, r1, p1, q1);
+    }
+
+    if (are_points_same_2d(p1, r2, epsilon) && are_points_same_2d(q1,q2, epsilon)){
+        // shared edge p1-q1, q2-r2
+        return is_on_same_side_2d(p2, r1, p1, q1);
+    }
+
+    if (are_points_same_2d(p1, q2, epsilon) && are_points_same_2d(r1, r2, epsilon)){
+        // shared edge p1-r1, q2-r2
+        return is_on_same_side_2d(p2, q1, p1, r1);
+    }
+    
+    if (are_points_same_2d(p1, r2, epsilon) && are_points_same_2d(r1, q2, epsilon)){
+        // shared edge p1-r1, q2-r2
+        return is_on_same_side_2d(p2, q1, p1, r1);
+    }
+    
+
+
 
     return false; // No shared edge found, or vertices are not on the same side
 }
@@ -1088,7 +1249,8 @@ __device__ float angle_between_vectors_2d(float2 a, float2 b) {
 
 __device__ bool angle_range_overlap(float angle_std, float angle1, float angle2, float epsilon)
 {
-    epsilon = 1e-6;
+    //epsilon = 1e-6;
+    epsilon = 0;
     float lower_bound, upper_bound;
     bool is_angle_in_range = false;
     // Check if either angle1 or angle2 is within the range defined by angle_std
