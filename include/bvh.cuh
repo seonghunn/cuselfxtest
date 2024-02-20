@@ -221,37 +221,6 @@ void construct_internal_nodes(const basic_device_bvh<Real, Object, IsConst> &sel
     cudaDeviceSynchronize();
 }
 
-        // template <typename Real, typename Object, bool IsConst, typename UInt>
-        // void construct_internal_nodes(const basic_device_bvh<Real, Object, IsConst> &self,
-        //                               UInt const *node_code, const unsigned int num_objects)
-        // {
-        //     thrust::for_each(thrust::device,
-        //                      thrust::make_counting_iterator<unsigned int>(0),
-        //                      thrust::make_counting_iterator<unsigned int>(num_objects - 1),
-        //                      [self, node_code, num_objects] __device__(const unsigned int idx)
-        //                      {
-        //                          self.nodes[idx].object_idx = 0xFFFFFFFF; //  internal nodes
-
-        //                          const uint2 ij = determine_range(node_code, num_objects, idx);
-        //                          const int gamma = find_split(node_code, num_objects, ij.x, ij.y);
-
-        //                          self.nodes[idx].left_idx = gamma;
-        //                          self.nodes[idx].right_idx = gamma + 1;
-        //                          if (thrust::min(ij.x, ij.y) == gamma)
-        //                          {
-        //                              self.nodes[idx].left_idx += num_objects - 1;
-        //                          }
-        //                          if (thrust::max(ij.x, ij.y) == gamma + 1)
-        //                          {
-        //                              self.nodes[idx].right_idx += num_objects - 1;
-        //                          }
-        //                          self.nodes[self.nodes[idx].left_idx].parent_idx = idx;
-        //                          self.nodes[self.nodes[idx].right_idx].parent_idx = idx;
-        //                          return;
-        //                      });
-        //     return;
-        // }
-
     } // detail
 
     template <typename Real, typename Object>
@@ -304,64 +273,7 @@ void construct_internal_nodes(const basic_device_bvh<Real, Object, IsConst> &sel
               objects_d_(first, last),
               query_host_enabled_(query_host_enabled)
         {
-            
-            //this->assign(first, last);
-            /*
-            // CUDA 이벤트를 선언합니다.
-            cudaEvent_t start, stop;
-            cudaEventCreate(&start);
-            cudaEventCreate(&stop);
-
-            // 시작 이벤트를 기록합니다.
-            cudaEventRecord(start);
-
-            // 호스트에서 디바이스로의 복사를 수행합니다.
-            objects_d_ = objects_h_;
-            // CUDA 동기화 추가
-            cudaDeviceSynchronize();
-
-            // 종료 이벤트를 기록합니다.
-            cudaEventRecord(stop);
-            cudaEventSynchronize(stop);
-
-            // 시작 및 종료 이벤트 사이의 경과 시간을 계산합니다.
-            float milliseconds = 0;
-            cudaEventElapsedTime(&milliseconds, start, stop);
-
-            // 출력
-            std::cout << "Host to Device copy took: " << milliseconds << " ms" << std::endl;
-
-            // 생성된 이벤트를 제거합니다.
-            cudaEventDestroy(start);
-            cudaEventDestroy(stop);
-*/
-
-            // CUDA 이벤트를 선언합니다.
-            //cudaEvent_t start, stop;
-            //cudaEventCreate(&start);
-            //cudaEventCreate(&stop);
-
-            // 시작 이벤트를 기록합니다.
-            //cudaEventRecord(start);
-
             this->construct();
-            // CUDA 동기화 추가
-            //cudaDeviceSynchronize();
-
-            // 종료 이벤트를 기록합니다.
-            //cudaEventRecord(stop);
-            //cudaEventSynchronize(stop);
-
-            // 시작 및 종료 이벤트 사이의 경과 시간을 계산합니다.
-            //float milliseconds = 0;
-            //cudaEventElapsedTime(&milliseconds, start, stop);
-
-            // 출력
-            //std::cout << "bvh construct took : " << milliseconds << " ms" << std::endl;
-
-            // 생성된 이벤트를 제거합니다.
-            //cudaEventDestroy(start);
-            //cudaEventDestroy(stop);
         }
 
         bvh() = default;
@@ -438,21 +350,12 @@ void construct_internal_nodes(const basic_device_bvh<Real, Object, IsConst> &sel
             thrust::transform(this->objects_d_.begin(), this->objects_d_.end(),
                               aabbs_.begin() + num_internal_nodes, aabb_getter_type());
 
-            // reduce : merge sort처럼 반복적으로 연산하여 하나의 값을 얻어냄
-            // aabb_whole : 최대 AABB
             const auto aabb_whole = thrust::reduce(
                 aabbs_.begin() + num_internal_nodes, aabbs_.end(), default_aabb,
                 [] __device__(const aabb_type &lhs, const aabb_type &rhs)
                 {
                     return merge(lhs, rhs);
                 });
-
-/*
-            std::cout << "aabb_whole upper" << aabb_whole.upper.x << ", " << aabb_whole.upper.y << ", " << aabb_whole.upper.z << ", "
-                      << aabb_whole.upper.w
-                      << " aabb_whole lower" << aabb_whole.lower.x << ", " << aabb_whole.lower.y << ", " << aabb_whole.lower.z << ", "
-                      << aabb_whole.lower.w << std::endl;
-                      */
 
             thrust::device_vector<unsigned long long int> morton(num_objects);
             thrust::transform(this->objects_d_.begin(), this->objects_d_.end(),
@@ -472,21 +375,6 @@ void construct_internal_nodes(const basic_device_bvh<Real, Object, IsConst> &sel
                                        thrust::make_zip_iterator(
                                            thrust::make_tuple(aabbs_.begin() + num_internal_nodes,
                                                               indices.begin())));
-
-            
-            /*
-            // 1. device_vector에서 host_vector로 데이터 복사
-            thrust::host_vector<unsigned int> morton_h = morton;
-            int i = 0;
-
-            // 2. host_vector의 내용 출력
-            std::cout<<"morton code before unique"<<std::endl;
-            for(const auto& code : morton_h) {
-                std::bitset<32> beforeShift(code);
-                std::cout <<i<<"  "<< beforeShift << std::endl;
-                i++;
-            }
-            */
 
             // --------------------------------------------------------------------
             // transform morton code 32bit to 64bit include index
@@ -583,45 +471,6 @@ void construct_internal_nodes(const basic_device_bvh<Real, Object, IsConst> &sel
                                  }
                                  return;
                              });
-
-            
-            // // 1. nodes_ 데이터를 CPU로 복사하기 위한 벡터 준비
-            // std::vector<node_type> host_nodes(this->nodes_.size());
-            // std::vector<aabb_type> host_aabbs(this->aabbs_.size()); // aabb_type은 해당 AABB의 데이터 타입이라고 가정합니다.
-
-            // // 2. GPU에서 CPU로 데이터 복사
-            // thrust::copy(this->nodes_.begin(), this->nodes_.end(), host_nodes.begin());
-            // thrust::copy(this->aabbs_.begin(), this->aabbs_.end(), host_aabbs.begin());
-
-            // // 3. CPU 상에서 데이터 출력
-            // i = 0;
-            // for (const auto& node : host_nodes) {
-            //     const auto& aabb = host_aabbs[i];
-            // std::cout << i << " "
-            //           << "Parent idx: " << node.parent_idx
-            //           << ", Left idx: " << node.left_idx
-            //           << ", Right idx: " << node.right_idx
-            //           << ", Object idx: " << node.object_idx
-            //           << ", AABB Lower: [" << aabb.lower.x << ", " << aabb.lower.y << ", " << aabb.lower.z << ", " << aabb.lower.w <<"]"
-            //           << ", AABB Upper: [" << aabb.upper.x << ", " << aabb.upper.y << ", " << aabb.upper.z << ", " << aabb.upper.w << "]"
-            //           << std::endl;
-            //     i++;
-            // }
-
-
-
-
-            
-            // // 1. morton64 정렬
-            // thrust::sort(morton64.begin(), morton64.end());
-
-            // // 2. 연속된 중복 제거
-            // auto end_unique = thrust::unique(morton64.begin(), morton64.end());
-
-            // // 3. 모든 원소가 고유한지 확인
-            // bool morton64_is_unique = (end_unique == morton64.end());
-            // std::cout << "Is morton64 unique? " << morton64_is_unique << std::endl;
-
 
             if (this->query_host_enabled_)
             {

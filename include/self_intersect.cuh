@@ -21,8 +21,6 @@ namespace selfx{
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
         if (idx >= num_faces) return;
-        //unsigned int num_found = 0;
-        //if (idx != 23) return;
         // Check if the index is valid
         if (F_d_raw[idx].i == -1) {
             num_found_query_raw[idx] = 0;
@@ -47,14 +45,6 @@ namespace selfx{
 
         query_box.lower = make_float4(minX, minY, minZ, 0);
         query_box.upper = make_float4(maxX, maxY, maxZ, 0);
-        // printf("minX : %f\n", minX);
-        // printf("minY : %f\n", minY);
-        // printf("minZ : %f\n", minZ);
-        // printf("maxX : %f\n", maxX);
-        // printf("maxY : %f\n", maxY);
-        // printf("maxZ : %f\n", maxZ);
-
-        //printf("idx %d\n", idx);
         // Perform the query
         unsigned int num_found = lbvh::get_number_of_intersect_candidates(bvh_dev, lbvh::overlaps(query_box), buffer, idx);
 
@@ -72,18 +62,10 @@ namespace selfx{
         std::size_t num_faces)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
-        //return;
         if (idx >= num_faces) return;
-        //unsigned int num_found = 0;
-        //if (idx != 23) return;
-        // Check if the index is valid
         if (F_d_raw[idx].i == -1) {
-            //num_found_query_raw[idx] = 0;// itself
             return;
         }
-
-        //int buffer_size = num_found_query_raw[idx];
-        //unsigned int buffer[BUFFER_SIZE];
 
         // Get query object
         const auto self = bvh_dev.objects[idx];
@@ -100,14 +82,7 @@ namespace selfx{
 
         query_box.lower = make_float4(minX, minY, minZ, 0);
         query_box.upper = make_float4(maxX, maxY, maxZ, 0);
-        // printf("minX : %f\n", minX);
-        // printf("minY : %f\n", minY);
-        // printf("minZ : %f\n", minZ);
-        // printf("maxX : %f\n", maxX);
-        // printf("maxY : %f\n", maxY);
-        // printf("maxZ : %f\n", maxZ);
 
-        //printf("idx %d\n", idx);
         // Compute the query
         int first = first_query_result_raw[idx];
         //if(idx== num_faces-1) printf("first_query %d\n", first_query_result_raw[idx+1]);
@@ -226,23 +201,14 @@ namespace selfx{
     cudaMalloc(&d_pos, sizeof(unsigned int));
     cudaMemset(d_pos, 0, sizeof(unsigned int));
 
-    unsigned int h_isIntersect = 0; // host에서 사용할 변수
-    unsigned int* d_isIntersect;        // device에서 사용할 포인터
+    unsigned int h_isIntersect = 0;
+    unsigned int* d_isIntersect;
     cudaMalloc((void**)&d_isIntersect, sizeof(unsigned int));
     cudaMemcpy(d_isIntersect, &h_isIntersect, sizeof(unsigned int), cudaMemcpyHostToDevice);
     
     unsigned int num_query_result = 0;
     cudaMemcpy(&num_query_result, &first_query_result_raw[num_faces], sizeof(unsigned int), cudaMemcpyDeviceToHost);
     num_query_result /= 2;
-    //printf("num_query_result %d\n", num_query_result);
-
-    // unsigned int* buffer_result_host = new unsigned int[2 * num_query_result];
-    // cudaMemcpy(buffer_result_host, buffer_results_raw, 2 * num_query_result * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-    
-    // for(unsigned int i = 0; i < num_query_result; i++){
-    //     printf("i : %d result %d %d\n", i, buffer_result_host[2 * i], buffer_result_host[2 * i + 1]);
-    // }
-
 
     thrust::for_each(thrust::device,
                      thrust::make_counting_iterator<unsigned int>(0),
@@ -303,6 +269,7 @@ namespace selfx{
                                     //여기 주석
                                 }
                             }
+                        }
 
                             float tri_a[3][3];
                             float tri_b[3][3];
@@ -410,7 +377,7 @@ namespace selfx{
                                     else{
                                         atomicExch(d_isIntersect, 1);
                                         // check where is intersection -------------------
-                                        printf("intersect dist %.30f, epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", dist, epsilon, source.x, source.y, source.z, target.x, target.y, target.z, p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);
+                                        //printf("intersect dist %.30f, epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", dist, epsilon, source.x, source.y, source.z, target.x, target.y, target.z, p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);
                                         int pos = atomicAdd(d_pos, 2);
                                         if (pos < 2 * maxIntersections - 2) {
                                             d_intersections[pos] = query_idx;

@@ -258,33 +258,6 @@ bool isect_tri_tri_v3_ex(const float tri_a[3][3],
   return false;
 }
 
-// __device__ __host__
-// bool isect_tri_tri_v3(const float t_a0[3],
-//                       const float t_a1[3],
-//                       const float t_a2[3],
-//                       const float t_b0[3],
-//                       const float t_b1[3],
-//                       const float t_b2[3],
-//                       float r_i1[3],
-//                       float r_i2[3])
-// {
-//   float tri_a[3][3], tri_b[3][3];
-//   int dummy;
-// //   copy_v3_v3(tri_a[0], t_a0);
-// //   copy_v3_v3(tri_a[1], t_a1);
-// //   copy_v3_v3(tri_a[2], t_a2);
-// //   copy_v3_v3(tri_b[0], t_b0);
-// //   copy_v3_v3(tri_b[1], t_b1);
-// //   copy_v3_v3(tri_b[2], t_b2);
-//   copy_v3_v3_float_float3(tri_a[0], t_a0);
-//   copy_v3_v3_float_float3(tri_a[1], t_a1);
-//   copy_v3_v3_float_float3(tri_a[2], t_a2);
-//   copy_v3_v3_float_float3(tri_b[0], t_b0);
-//   copy_v3_v3_float_float3(tri_b[1], t_b1);
-//   copy_v3_v3_float_float3(tri_b[2], t_b2);
-//   return isect_tri_tri_v3_ex(tri_a, tri_b, r_i1, r_i2, &dummy);
-// }
-
 __device__ __host__
 bool isect_tri_tri_v3(const float3 p1,
                       const float3 q1,

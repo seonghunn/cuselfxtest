@@ -1,5 +1,5 @@
 #include "selfx.cuh"
-#include "include/morton_code.cuh"
+//#include "include/morton_code.cuh"
 #include <igl/read_triangle_mesh.h>
 #include <Eigen/Dense>
 #include <string>

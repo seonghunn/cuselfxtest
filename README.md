@@ -7,5 +7,5 @@ chmod +x setup.sh
 ./setup.sh
 cd build
 make
-./selfx <mesh filename in current path>
+./selfx <mesh filepath>
 ```

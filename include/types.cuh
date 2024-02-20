@@ -6,11 +6,6 @@
 // FACE SIZE : buffer size for adj faces
 #define FACES_SIZE 64
 
-// Operator overload for printing float3 using cout
-std::ostream& operator<<(std::ostream& os, const float3& vec) {
-    os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
-    return os;
-}
 
 template <typename T>
 struct Vertex
