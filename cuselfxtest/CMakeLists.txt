@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Project name
-project(selfx)
+project(cuselfxtest)
 
 # Enable C++ and CUDA
 enable_language(CUDA)
@@ -23,13 +23,13 @@ endif()
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -g -O3 --expt-extended-lambda")
 
 # Add your main.cu and other required files
-add_executable(selfx ../main.cu)
+add_executable(cuselfxtest ../main.cu)
 
 # Link to igl
-target_link_libraries(selfx igl::core)
+target_link_libraries(cuselfxtest igl::core)
 
 # If there are other include directories or other libraries you need,
 # you can add them using target_include_directories and target_link_libraries respectively.
 
 # Since you have "include" directory, you might want to add it to the include directories
-target_include_directories(selfx PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(cuselfxtest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

@@ -15,6 +15,59 @@
 using namespace std;
 
 namespace selfx{
+    __device__ __host__
+    inline bool are_vertices_same(const float3 v1, const float3 v2, float epsilon){
+        //float epsilon = 1e-4;
+        return std::abs(v1.x - v2.x) < epsilon &&
+           std::abs(v1.y - v2.y) < epsilon &&
+           std::abs(v1.z - v2.z) < epsilon;
+    }
+
+    __device__ __host__
+    inline bool detect_zero_face(const float3 p, const float3 q, const float3 r){
+        float epsilon = 1e-4;
+        bool same_pq = are_vertices_same(p, q, epsilon);
+        bool same_qr = are_vertices_same(q, r, epsilon);
+        bool same_rp = are_vertices_same(r, p, epsilon);
+        return (same_pq && same_qr && same_rp);
+    }
+
+    // if two vertices are same in triangle
+    __device__ __host__
+    inline bool detect_invalid_face(const float3 p, const float3 q, const float3 r){
+        float epsilon = 1e-5;
+        bool same_pq = are_vertices_same(p, q, epsilon);
+        bool same_qr = are_vertices_same(q, r, epsilon);
+        bool same_rp = are_vertices_same(r, p, epsilon);
+        return (same_pq || same_qr || same_rp);
+    }
+
+    // if triangle pair has shared edge
+    __device__ __host__
+    inline bool detect_shared_edge_coord(const float3 p1, const float3 q1, const float3 r1, 
+                            const float3 p2, const float3 q2, const float3 r2){
+        float epsilon = 1e-6;
+        int shared_vertices = 0;
+        shared_vertices += are_vertices_same(p1, p2, epsilon) || are_vertices_same(p1, q2, epsilon) || are_vertices_same(p1, r2, epsilon);
+        shared_vertices += are_vertices_same(q1, p2, epsilon) || are_vertices_same(q1, q2, epsilon) || are_vertices_same(q1, r2, epsilon);
+        shared_vertices += are_vertices_same(r1, p2, epsilon) || are_vertices_same(r1, q2, epsilon) || are_vertices_same(r1, r2, epsilon);
+
+        return shared_vertices >= 2;
+    }
+
+    __device__ __host__
+    inline bool detect_same_plane_coord(const float3 p1, const float3 q1, const float3 r1, 
+                           const float3 p2, const float3 q2, const float3 r2){
+        float epsilon = 1e-6;
+        return (are_vertices_same(p1, p2, epsilon) && are_vertices_same(q1, q2, epsilon) && are_vertices_same(r1, r2, epsilon)) ||
+               (are_vertices_same(p1, p2, epsilon) && are_vertices_same(q1, r2, epsilon) && are_vertices_same(r1, q2, epsilon)) ||
+               (are_vertices_same(p1, q2, epsilon) && are_vertices_same(q1, p2, epsilon) && are_vertices_same(r1, r2, epsilon)) ||
+               (are_vertices_same(p1, q2, epsilon) && are_vertices_same(q1, r2, epsilon) && are_vertices_same(r1, p2, epsilon)) ||
+               (are_vertices_same(p1, r2, epsilon) && are_vertices_same(q1, p2, epsilon) && are_vertices_same(r1, q2, epsilon)) ||
+               (are_vertices_same(p1, r2, epsilon) && are_vertices_same(q1, q2, epsilon) && are_vertices_same(r1, p2, epsilon));
+    }
+
+    __global__ void warmupKernel() {}
 
     __global__ void compute_num_of_query_result_kernel(
         Triangle<int>* F_d_raw,
@@ -90,8 +143,10 @@ namespace selfx{
         unsigned int num_found = lbvh::query_device(bvh_dev, lbvh::overlaps(query_box), buffer_results_query_raw, idx, first);
     }
 
-    bool self_intersect(Vertex<float> *V, Triangle<int> *F, unsigned int num_vertices, unsigned int num_faces, float epsilon) {
-        
+    bool self_intersect(Vertex<float> *V, Triangle<int> *F, unsigned int num_vertices, unsigned int num_faces) {
+    float epsilon = 5e-3;
+    warmupKernel<<<1, 1>>>();
+    cudaDeviceSynchronize();
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -154,29 +209,29 @@ namespace selfx{
     cudaEventDestroy(start0);
     cudaEventDestroy(stop0);
 
-
-
     // compute query list ----------------------------------
     cudaEvent_t start1, stop1;
     cudaEventCreate(&start1);
     cudaEventCreate(&stop1);
     cudaEventRecord(start1);
-    //const std::size_t N = triangles.size();
+
     thrust::device_vector<unsigned int> num_found_results_dev(num_faces);
     thrust::device_vector<unsigned int> buffer_results_dev(num_faces * BUFFER_SIZE, 0xFFFFFFFF);
     thrust::device_vector<unsigned int> first_query_result(num_faces + 1);
 
     unsigned int* num_found_results_raw = thrust::raw_pointer_cast(num_found_results_dev.data());
-    unsigned int* buffer_results_raw = thrust::raw_pointer_cast(buffer_results_dev.data());
+    unsigned int* intersection_candidates = thrust::raw_pointer_cast(buffer_results_dev.data());
     unsigned int* first_query_result_raw = thrust::raw_pointer_cast(first_query_result.data());
     
+    // get number of  intersection candidates
     compute_num_of_query_result_kernel<<<(num_faces + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(F_d_raw, bvh_dev, num_found_results_raw, num_faces);
     cudaDeviceSynchronize();
 
     thrust::exclusive_scan(thrust::device, num_found_results_raw, num_found_results_raw + num_faces + 1, first_query_result_raw);
     cudaDeviceSynchronize();
 
-    compute_query_list_kernel<<<(num_faces + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(F_d_raw, bvh_dev, num_found_results_raw, first_query_result_raw, buffer_results_raw, num_faces);
+    // save data of intersection candidates
+    compute_query_list_kernel<<<(num_faces + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(F_d_raw, bvh_dev, num_found_results_raw, first_query_result_raw, intersection_candidates, num_faces);
     cudaDeviceSynchronize();
 
     cudaEventRecord(stop1);
@@ -188,43 +243,49 @@ namespace selfx{
     cudaEventDestroy(stop1);
 
 
-    // remove adjacent faces ---------------------------------------
+    // actual triangle intersection test based on query result ---------------------------------------
     cudaEvent_t start2, stop2;
     cudaEventCreate(&start2);
     cudaEventCreate(&stop2);
     cudaEventRecord(start2);
 
+    // list of actual intersection pairs
     const int maxIntersections = num_faces;
     unsigned int* d_intersections;
     cudaMalloc((void**)&d_intersections, 2 * maxIntersections * sizeof(unsigned int));
     
+    // tmp variables for atomic operation
     unsigned int* d_pos;
     cudaMalloc(&d_pos, sizeof(unsigned int));
     cudaMemset(d_pos, 0, sizeof(unsigned int));
 
+    // isIntersect
     unsigned int h_isIntersect = 0;
     unsigned int* d_isIntersect;
     cudaMalloc((void**)&d_isIntersect, sizeof(unsigned int));
     cudaMemcpy(d_isIntersect, &h_isIntersect, sizeof(unsigned int), cudaMemcpyHostToDevice);
     
+    // get query result size
     unsigned int num_query_result = 0;
     cudaMemcpy(&num_query_result, &first_query_result_raw[num_faces], sizeof(unsigned int), cudaMemcpyDeviceToHost);
+
+    // actual number of query result without the query idx itself
     num_query_result /= 2;
 
     thrust::for_each(thrust::device,
                      thrust::make_counting_iterator<unsigned int>(0),
                      thrust::make_counting_iterator<unsigned int>(num_query_result),
-                     [epsilon, d_isIntersect, d_pos, d_intersections, maxIntersections, first_query_result_raw, triangles_d_raw, num_found_results_raw, buffer_results_raw, F_d_raw] __device__(std::size_t idx) {
+                     [epsilon, d_isIntersect, d_pos, d_intersections, maxIntersections, first_query_result_raw, triangles_d_raw, num_found_results_raw, intersection_candidates, F_d_raw] __device__(std::size_t idx) {
                          
-                        unsigned int query_idx = buffer_results_raw[2 * idx];
-                        unsigned int current_idx = buffer_results_raw[2 * idx + 1];
+                        unsigned int query_idx = intersection_candidates[2 * idx];
+                        unsigned int current_idx = intersection_candidates[2 * idx + 1];
                         const unsigned int num_found = num_found_results_raw[query_idx];
+                        
+                        // invalid faces
                         if(num_found == 0) return;
-
-                        //unsigned int query_idx = buffer_results_raw[i];
-                        //if(idx == 0) printf("query_idx %d\n",query_idx);
                         if(query_idx == 0xFFFFFFFF) return;
                         if(current_idx == 0xFFFFFFFF) return;
+
                         // Retrieve faces for idx and query_idx
                         Triangle<int> current_face = F_d_raw[current_idx];
                         Triangle<int> query_face = F_d_raw[query_idx];
@@ -244,6 +305,19 @@ namespace selfx{
                         p2 = query_tris.v0;
                         q2 = query_tris.v1;
                         r2 = query_tris.v2;
+
+                        // remove invalid face from test
+                        // zero faces
+                        if(detect_zero_face(p1, q1, r1)) return;
+                        if(detect_zero_face(p2, q2, r2)) return;
+                        // line
+                        if(detect_invalid_face(p1,q1,r1)) return;
+                        if(detect_invalid_face(p2,q2,r2)) return;
+                        // same plane
+                        if(detect_same_plane_coord(p1,q1,r1,p2,q2,r2)) return;
+                        // line
+                        if(vertices_query[0]== vertices_query[1] || vertices_query[1] == vertices_query[2] || vertices_query[2] == vertices_query[0]) return;
+                        if(vertices_current[0]== vertices_current[1] || vertices_current[1] == vertices_current[2] || vertices_current[2] == vertices_current[0]) return;
 
                         float distP1 = norm3df(p1.x, p1.y, p1.z);
                         float distQ1 = norm3df(q1.x, q1.y, q1.z);
@@ -267,7 +341,6 @@ namespace selfx{
                             for(unsigned int k = 0; k < 3; k++){
                                 if(vertex_current == vertices_query[k]){
                                     num_count++;
-                                    //여기 주석
                                 }
                             }
                         }
@@ -282,16 +355,12 @@ namespace selfx{
                             copy_v3_v3_float_float3(tri_b[2], r2);
                             // check if coplanar
                             if(is_coplanar_blender(tri_a, tri_b)){
-
-                            //if(is_coplanar(p1, q1, r1, p2, q2, r2, epsilon)){
                                 //printf("coplanar\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);
                                 // no sharing
                                 if(num_count == 0){
                                     //printf("case 0 idx %d query %d\n",idx,query_idx);
                                     if(coplanar_without_sharing_test(p1,q1,r1,p2,q2,r2)){
-                                        printf("case 0 passed\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);
                                         atomicExch(d_isIntersect, 1);
-                                        // check where is intersection -------------------
                                         int pos = atomicAdd(d_pos, 2);
                                         if (pos < 2 * maxIntersections - 2) {
                                             d_intersections[pos] = query_idx;
@@ -303,12 +372,8 @@ namespace selfx{
                                 
                                 // vertex sharing
                                 if(num_count == 1){
-                                    //printf("case 1 idx %d query %d\n",idx,query_idx);
-                                    // check done
                                     if(coplanar_vertex_sharing_test(p1,q1,r1,p2,q2,r2,epsilon)){
-                                        printf("case 1 passed \nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);
                                         atomicExch(d_isIntersect, 1);
-                                        // check where is intersection -------------------
                                         int pos = atomicAdd(d_pos, 2);
                                         if (pos < 2 * maxIntersections - 2) {
                                             d_intersections[pos] = query_idx;
@@ -322,9 +387,7 @@ namespace selfx{
                                     //printf("case 2 idx %d query %d\n",idx,query_idx);
                                     // if other vertex is same side (intersect)
                                     if(coplanar_same_side_test(p1,q1,r1,p2,q2,r2,epsilon)){
-                                        printf("case 2 passed \nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);
                                         atomicExch(d_isIntersect, 1);
-                                        // check where is intersection -------------------
                                         int pos = atomicAdd(d_pos, 2);
                                         if (pos < 2 * maxIntersections - 2) {
                                             d_intersections[pos] = query_idx;
@@ -332,14 +395,12 @@ namespace selfx{
                                         }
                                     }
                                     return;
-                                    // remove faces from query test (already tested)
                                 }
                                 // identical face (always intersect)
                                 if(num_count == 3){
                                     // printf("case 3 idx %d query %d\n",idx,query_idx);
                                     // printf("case 3 passed idx %d query %d\n",idx,query_idx);
                                     atomicExch(d_isIntersect, 1);
-                                    // check where is intersection -------------------
                                     int pos = atomicAdd(d_pos, 2);
                                     if (pos < 2 * maxIntersections - 2) {
                                         d_intersections[pos] = query_idx;
@@ -350,13 +411,14 @@ namespace selfx{
                                 return;
                             }
                             else{
-                                // no coplanar, share edge
+                                // no coplanar, shared edge
                                 if(num_count == 2){
+                                    return; // remove from the test
+                                }
+                                else if(detect_shared_edge_coord(p1,q1,r1,p2,q2,r2)){ // remove from the test
                                     return;
                                 }
 
-                                //bool coplanar;
-                                //unsigned int num_found = num_found_results_raw[query_idx];
                                 float3 source, target;
 
                                 source = make_float3(1,1,1);
@@ -364,20 +426,20 @@ namespace selfx{
 
                                 float r_i1[3];
                                 float r_i2[3];
+                                // actual intersection test
                                 bool isIntersecting = isect_tri_tri_v3(p1,q1,r1,p2,q2,r2,r_i1,r_i2);
-                                //printf("intersecting %d shared vertex %d\ndist %.30f, epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n",isIntersecting, sharedVertex, dist, epsilon, source.x, source.y, source.z, target.x, target.y, target.z, p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);                                        
+                                
                                 if(isIntersecting){
                                     copy_v3_v3_float3_float(source, r_i1);
                                     copy_v3_v3_float3_float(target, r_i2);
                                     float dist = largest_distance(source, target);
-                                    //bool sharedVertex = check_if_shared_vertex(p1,q1,r1,p2,q2,r2);
                                     bool sharedVertex = (num_count == 1);
+                                    // if the distance is less than eps with shared vertex, the intersection point would be shared vertex
                                     if(dist < epsilon && sharedVertex){
                                         return; // not self intersect
                                     }
                                     else{
                                         atomicExch(d_isIntersect, 1);
-                                        // check where is intersection -------------------
                                         //printf("intersect dist %.30f, epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", dist, epsilon, source.x, source.y, source.z, target.x, target.y, target.z, p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);
                                         int pos = atomicAdd(d_pos, 2);
                                         if (pos < 2 * maxIntersections - 2) {
@@ -393,12 +455,6 @@ namespace selfx{
                         return;
                      });
 
-
-    // cudaMemcpy(buffer_result_host, buffer_results_raw, 2 * num_query_result * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-    
-    // for(unsigned int i = 0; i < num_query_result; i++){
-    //     printf("i : %d result %d %d\n", i, buffer_result_host[2 * i], buffer_result_host[2 * i + 1]);
-    // }                     
 
     cudaEventRecord(stop2);
     cudaEventSynchronize(stop2);

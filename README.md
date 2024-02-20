@@ -3,9 +3,8 @@
 - All algorithms including BVH construction and query check, triangle intersection test are run in parallel at GPU
 ## Run
 ```
-chmod +x setup.sh
-./setup.sh
+cd cuselfxtest
+pip install -e .
 cd build
-make
-./selfx <mesh filepath>
+./cuselfxtest <mesh filepath>
 ```
