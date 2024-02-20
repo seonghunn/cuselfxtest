@@ -53,9 +53,9 @@ setup(
     install_requires=[
         # 여기에 필요한 Python 패키지 의존성 추가
     ],
-    author='Your Name',
-    author_email='your.email@example.com',
-    description='A C++ project with Python bindings for self-intersection tests using CUDA and libigl.',
+    author='seonghunn',
+    author_email='4ngle86@gmail.com',
+    description='A C++ project for self-intersection tests using CUDA and libigl.',
     long_description='This is a package for cuselfxtest, a project that performs self-intersection tests on 3D models using CUDA and libigl.',
     url='https://github.com/yourgithubrepo/cuselfxtest',
 )
