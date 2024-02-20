@@ -7,7 +7,10 @@
 #include "types.cuh"
 #include "tri_tri_intersect.cuh"
 #include "tri_tri_3d_blender.cuh"
-#define BLOCK_SIZE 64
+
+// Average expected number of intersection candidates
+#define BUFFER_SIZE 512
+#define BLOCK_SIZE 512
 
 using namespace std;
 
@@ -50,7 +53,6 @@ namespace selfx{
 
         // Copy results to the device vector
         num_found_query_raw[idx] = 2 * num_found;
-        //printf("%d\n", num_found_query_raw[idx]);
     }
 
     __global__ void compute_query_list_kernel(
@@ -85,7 +87,6 @@ namespace selfx{
 
         // Compute the query
         int first = first_query_result_raw[idx];
-        //if(idx== num_faces-1) printf("first_query %d\n", first_query_result_raw[idx+1]);
         unsigned int num_found = lbvh::query_device(bvh_dev, lbvh::overlaps(query_box), buffer_results_query_raw, idx, first);
     }
 
@@ -96,7 +97,7 @@ namespace selfx{
     cudaEventCreate(&stop);
     cudaEventRecord(start);
     
-    // init triangle list ----------------------
+    // get triangle data to build bvh -----------------
     cudaEvent_t start_init, stop_init;
     cudaEventCreate(&start_init);
     cudaEventCreate(&stop_init);
@@ -403,153 +404,10 @@ namespace selfx{
     cudaEventSynchronize(stop2);
     float milliseconds2 = 0;
     cudaEventElapsedTime(&milliseconds2, start2, stop2);
-    printf("remove adjacent faces %f ms\n", milliseconds2);
+    printf("tri-tri intersection test %f ms\n", milliseconds2);
     cudaEventDestroy(start2);
     cudaEventDestroy(stop2);
 
-
-    // // actual triangle - triangle intersection test with query list --------------------------
-    // cudaEvent_t start3, stop3;
-    // cudaEventCreate(&start3);
-    // cudaEventCreate(&stop3);
-    // cudaEventRecord(start3);
-
-    
-    // thrust::for_each(thrust::device,
-    //                 thrust::make_counting_iterator<std::size_t>(0),//0
-    //                 thrust::make_counting_iterator<std::size_t>(num_query_result),//N
-    //                 //[d_sources_targets, epsilon, d_pos, F_d_raw, buffer_results_raw, num_found_results_raw, triangles_d_raw, d_isIntersect, d_intersections, maxIntersections, d_invalid_indices, d_invalid_count] __device__(std::size_t idx) {
-    //                 [epsilon, d_pos, F_d_raw, first_query_result_raw, buffer_results_raw, num_found_results_raw, triangles_d_raw, d_isIntersect, d_intersections, maxIntersections, num_faces] __device__(std::size_t idx) {
-    //                     // invalid triangle
-    //                     //if(idx != 1) return;
-    //                     unsigned int query_idx = buffer_results_raw[2 * idx];
-    //                     unsigned int current_idx = buffer_results_raw[2 * idx + 1];
-                        
-    //                     if(query_idx == 0xFFFFFFFF) return;
-    //                     if(current_idx == 0xFFFFFFFF) return;
-
-    //                     //printf("query idx %u current idx %u\n", query_idx, current_idx);
-    //                     if(F_d_raw[query_idx].i == -1) {
-    //                     //if(F_d_raw[query_idx].i == -1) {
-    //                       //unsigned int pos = atomicAdd(d_invalid_count, 1);
-    //                       //d_invalid_indices[pos] = idx;
-    //                       return;
-    //                     }
-    //                     if(F_d_raw[current_idx].i == -1) return; // invalid triangle
-
-
-    //                     bool coplanar;
-    //                     //unsigned int num_found = num_found_results_raw[query_idx];
-    //                     float3 source, target;
-
-    //                     source = make_float3(1,1,1);
-    //                     target = make_float3(-1,-1,-1);
-
-    //                     float3 p1 = triangles_d_raw[query_idx].v0;
-    //                     float3 q1 = triangles_d_raw[query_idx].v1;
-    //                     float3 r1 = triangles_d_raw[query_idx].v2;
-
-    //                     float distP1 = norm3df(p1.x, p1.y, p1.z);
-    //                     float distQ1 = norm3df(q1.x, q1.y, q1.z);
-    //                     float distR1 = norm3df(r1.x, r1.y, r1.z);
-
-                            
-    //                         float3 p2 = triangles_d_raw[current_idx].v0;
-    //                         float3 q2 = triangles_d_raw[current_idx].v1;
-    //                         float3 r2 = triangles_d_raw[current_idx].v2;
-
-    //                         float distP2 = norm3df(p2.x, p2.y, p2.z);
-    //                         float distQ2 = norm3df(q2.x, q2.y, q2.z);
-    //                         float distR2 = norm3df(r2.x, r2.y, r2.z);
-
-
-    //                         // compute average distance
-    //                         float avgDist = (distP1 + distQ1 + distR1 + distP2 + distQ2 + distR2) / (10.0f * 6.0f);
-
-    //                         // scale
-    //                         p1.x /= avgDist; p1.y /= avgDist; p1.z /= avgDist;
-    //                         q1.x /= avgDist; q1.y /= avgDist; q1.z /= avgDist;
-    //                         r1.x /= avgDist; r1.y /= avgDist; r1.z /= avgDist;
-
-    //                         p2.x /= avgDist; p2.y /= avgDist; p2.z /= avgDist;
-    //                         q2.x /= avgDist; q2.y /= avgDist; q2.z /= avgDist;
-    //                         r2.x /= avgDist; r2.y /= avgDist; r2.z /= avgDist;
-
-    //                         // printf("p1: %f, %f, %f\n", p1.x, p1.y, p1.z);
-    //                         // printf("q1: %f, %f, %f\n", q1.x, q1.y, q1.z);
-    //                         // printf("r1: %f, %f, %f\n", r1.x, r1.y, r1.z);
-
-    //                         // printf("p2: %f, %f, %f\n", p2.x, p2.y, p2.z);
-    //                         // printf("q2: %f, %f, %f\n", q2.x, q2.y, q2.z);
-    //                         // printf("r2: %f, %f, %f\n", r2.x, r2.y, r2.z);
-
-
-    //                         //bool isIntersecting = tri_tri_intersection_test_3d(p1, q1, r1, p2, q2, r2, coplanar, source, target);
-    //                         float r_i1[3];
-    //                         float r_i2[3];
-    //                         bool isIntersecting = isect_tri_tri_v3(p1,q1,r1,p2,q2,r2,r_i1,r_i2);
-    //                         //printf("isIntersecting %d epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n",isIntersecting,epsilon, r_i1[0], r_i1[1], r_i1[2],r_i2[0],r_i2[1] ,r_i2[2], p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);                                        
-    //                         // printf("idx %d source x %f y %f z %f\n",idx, source.x, source.y, source.z);
-    //                         // printf("idx %d target x %f y %f z %f\n",idx, target.x, target.y, target.z);
-    //                         copy_v3_v3_float3_float(source, r_i1);
-    //                         copy_v3_v3_float3_float(target, r_i2);
-    //                         float dist = largest_distance(source, target);
-    //                         //bool sharedVertex = check_if_shared_vertex(p1,q1,r1,p2,q2,r2);
-    //                         bool sharedVertex = check_if_shared_vertex(F_d_raw[query_idx].i, F_d_raw[query_idx].j, F_d_raw[query_idx].k,
-    //                                     F_d_raw[current_idx].i, F_d_raw[current_idx].j, F_d_raw[current_idx].k);
-    //                         //printf("intersecting %d shared vertex %d\ndist %.30f, epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n",isIntersecting, sharedVertex, dist, epsilon, source.x, source.y, source.z, target.x, target.y, target.z, p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);                                        
-    //                         if(dist < epsilon && sharedVertex){
-    //                             return; // not self intersect
-    //                         }
-    //                         else{
-    //                             if(isIntersecting) {
-    //                                 atomicExch(d_isIntersect, 1);
-    //                                 // check where is intersection -------------------
-    //                                 printf("intersect dist %.30f, epsilon %.30f\nsource v %.30f %.30f %.30f\ntarget v %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nv %.30f %.30f %.30f\nf 1 2 3\nf 4 5 6\n", dist, epsilon, source.x, source.y, source.z, target.x, target.y, target.z, p1.x, p1.y, p1.z, q1.x, q1.y, q1.z, r1.x, r1.y, r1.z, p2.x, p2.y, p2.z, q2.x, q2.y, q2.z, r2.x, r2.y, r2.z);
-    //                                 // printf("idx %d dist %f\n"\
-    //                                 //     "p1 << %f, %f, %f;\n"\
-    //                                 //     "q1 << %f, %f, %f;\n"\
-    //                                 //     "r1 << %f, %f, %f;\n"\
-    //                                 //     "p2 << %f, %f, %f;\n"\
-    //                                 //     "q2 << %f, %f, %f;\n"\
-    //                                 //     "r2 << %f, %f, %f;\n"\
-    //                                 //     "query_idx %d %d %d\n"\
-    //                                 //     "current_idx %d %d %d\n",
-    //                                 //     idx,dist,
-    //                                 //     p1.x, p1.y, p1.z,
-    //                                 //     q1.x, q1.y, q1.z,
-    //                                 //     r1.x, r1.y, r1.z,
-    //                                 //     p2.x, p2.y, p2.z,
-    //                                 //     q2.x, q2.y, q2.z,
-    //                                 //     r2.x, r2.y, r2.z,
-    //                                 //     F_d_raw[query_idx].i, F_d_raw[query_idx].j, F_d_raw[query_idx].k,
-    //                                 //     F_d_raw[current_idx].i, F_d_raw[current_idx].j, F_d_raw[current_idx].k);
-
-
-    //                                 // printf("idx %d current face2 vertex %f y %f z %f\n", idx, q1.x, q1.y, q1.z);
-    //                                 // printf("idx %d current face3 vertex %f y %f z %f\n", idx, r1.x, r1.y, r1.z);
-    //                                 // printf("idx %d query face1 vertex %f y %f z %f\n", idx, p2.x, p2.y, p2.z);
-    //                                 // printf("idx %d query face2 vertex %f y %f z %f\n", idx, q2.x, q2.y, q2.z);
-    //                                 // printf("idx %d query face3 vertex %f y %f z %f\n", idx, r2.x, r2.y, r2.z);
-    //                                 int pos = atomicAdd(d_pos, 2);
-    //                                 if (pos < 2 * maxIntersections - 2) {
-    //                                     d_intersections[pos] = query_idx;
-    //                                     d_intersections[pos + 1] = current_idx;
-    //                                 }
-    //                             }
-    //                         }
-    //                     return;
-    //                 });
-    // cudaDeviceSynchronize();
-
-    // cudaEventRecord(stop3);
-    // cudaEventSynchronize(stop3);
-    // float milliseconds3 = 0;
-    // cudaEventElapsedTime(&milliseconds3, start3, stop3);
-    // printf("actual tri-tri test %f ms\n", milliseconds3);
-    // cudaEventDestroy(start3);
-    // cudaEventDestroy(stop3);
-    
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
 

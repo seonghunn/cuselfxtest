@@ -1,12 +1,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-// BUFFER SIZE : buffer size for query
-#define BUFFER_SIZE 64
-// FACE SIZE : buffer size for adj faces
-#define FACES_SIZE 64
-
-
 template <typename T>
 struct Vertex
 {

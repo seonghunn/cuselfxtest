@@ -23,7 +23,7 @@ endif()
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -g -O3 --expt-extended-lambda")
 
 # Add your main.cu and other required files
-add_executable(selfx main.cu)
+add_executable(selfx ../main.cu)
 
 # Link to igl
 target_link_libraries(selfx igl::core)

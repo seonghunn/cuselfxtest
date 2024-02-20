@@ -1,4 +1,4 @@
-#include "selfx.cuh"
+#include "cuselfxtest/selfx.cuh"
 //#include "include/morton_code.cuh"
 #include <igl/read_triangle_mesh.h>
 #include <Eigen/Dense>
